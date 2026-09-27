@@ -1,0 +1,40 @@
+# Virtual Environment
+.venv/
+venv/
+env/
+
+# Node & Dependencies
+node_modules/
+
+# Secrets & Sessions
+.env
+.auth/
+
+# Data & Output
+data/
+*.json
+!package.json
+
+# Cache & Bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+
+# Screenshots & Images
+*.png
+*.jpg
+*.jpeg
+
+# OS Files
+.DS_Store
+Thumbs.db
+
+# Scratch & Temporary scripts
+scratch_*.py
+dump_*.py
+check_*.py
+inspect_*.py
+parse_*.py
+get_*.py
+test_*.py
