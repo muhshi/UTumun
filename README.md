@@ -37,17 +37,30 @@ Automasi asisten Tutorial Online (Tuton) Universitas Terbuka (`elearning.ut.ac.i
 
 ## Penggunaan
 
-1. **Pemindaian Forum Diskusi:**
-   ```bash
-   python scan_all_courses_direct.py
-   ```
-   Data hasil scraping akan disimpan di folder `data/sessions/`.
+### 1. Sesi 1 (Hakikat & Sifat Bahasa)
+- **Pemindaian Forum Diskusi Sesi 1:**
+  ```bash
+  python scan_all_courses_direct.py
+  ```
+- **Analisis & Rekapitulasi Sesi 1:**
+  ```bash
+  python run_robust_match.py
+  ```
 
-2. **Analisis Status & Rekapitulasi:**
-   ```bash
-   python run_robust_match.py
-   ```
-   Menampilkan ringkasan status setiap kelas dan daftar mahasiswa yang belum selesai.
+### 2. Sesi 2 (Keterampilan Berbahasa)
+- **Unduh & Ekstrak Rubrik Resmi UT:**
+  ```bash
+  python download_rambu_requests.py
+  python read_rubrik_docx.py
+  ```
+- **Pemindaian Forum Diskusi Sesi 2 (4 Kelas):**
+  ```bash
+  python scan_sesi2_all.py
+  ```
+- **Evaluasi & Auto-Grader Sesi 2:**
+  ```bash
+  python grade_all_sesi2_pending.py
+  ```
 
 ## Lisensi
 MIT License
