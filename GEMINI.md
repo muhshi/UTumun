@@ -34,3 +34,10 @@ Jika Ibu Tutor memberikan instruksi singkat, pahami maksudnya secara otomatis:
 - **"Cek Sesi 1"**: Jalankan pemindaian status penilaian 4 kelas untuk Forum Diskusi Sesi 1 via `scan_all_courses_direct.py` dan `run_robust_match.py`.
 - **"Cek Sesi 2"**: Jalankan pemindaian status pengumpulan mahasiswa Sesi 2 di 4 kelas via `scan_sesi2_all.py`.
 - **"Nilai Sesi 2"**: Evaluasi seluruh jawaban mahasiswa yang belum dinilai di Sesi 2 via `grade_all_sesi2_pending.py` dan tampilkan draf nilai serta feedback 2 paragraf siap salin.
+
+---
+
+## 4. Standar Penyajian Teks Siap Salin (Kotak Tombol "Copy" Otomatis)
+- Setiap draf teks feedback untuk mahasiswa **WAJIB dimasukkan ke dalam blok kode Markdown (fenced code block ` ```text `)**.
+- **Tujuan Utama:** Agar antarmuka Antigravity secara otomatis memunculkan **tombol "Copy"** di pojok kanan atas kotak teks. Dengan demikian, Ibu Tutor cukup mengklik tombol "Copy" sekali klik untuk langsung menempelkan (*paste*) ke web e-learning UT tanpa perlu memblok teks manual.
+- DILARANG menggunakan kutipan biasa (`> quote`) untuk teks feedback; selalu gunakan blok kode ` ```text `.

@@ -25,3 +25,5 @@ Gunakan skill ini ketika berinteraksi mengenai mata kuliah Bahasa Indonesia (MKW
    - Tanpa NIM pada sapaan awal (gunakan nama mahasiswa).
 3. **Standar Rubrik**:
    - Gunakan modul BMP MKWN4108 dan berkas rubrik resmi Sesi terkait sebagai tolok ukur skor (skala 0–100).
+4. **Kotak Teks Tombol Copy Otomatis**:
+   - Setiap draf feedback mahasiswa **WAJIB diletakkan di dalam blok kode Markdown (` ```text `)** agar antarmuka obrolan Antigravity memunculkan tombol **"Copy"** di pojok kanan atas kotak. Ibu Tutor cukup mengklik tombol "Copy" sekali klik untuk menempelkan ke website UT.
