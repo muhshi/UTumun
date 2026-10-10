@@ -1,5 +1,5 @@
 import re
-from typing import Dict, Any, List, Tuple
+from typing import Dict, Any, List, Tuple, Optional, Union
 from playwright.async_api import Page
 from tuton.config import get_course_info, get_forum_cmid, get_assign_cmid, COURSES
 from tuton.matcher import clean_student_name
@@ -10,6 +10,21 @@ def build_flat_topic_url(raw_topic_url: str) -> str:
     if not d_match:
         raise ValueError(f"Tidak dapat mengekstrak ID diskusi dari URL: {raw_topic_url}")
     return f"https://elearning.ut.ac.id/mod/forum/discuss.php?d={d_match.group(1)}&mode=1"
+
+def build_assignment_grading_url(cmid: str, perpage: int = 100) -> str:
+    """Membangun URL grading tugas dengan perpage=100 untuk menghindari pemotongan pagination."""
+    return f"https://elearning.ut.ac.id/mod/assign/view.php?id={cmid}&action=grading&perpage={perpage}&filter="
+
+def parse_assignment_grade_and_status(grade_text: str) -> Tuple[Optional[Union[int, float]], str]:
+    """Mengekstrak skor numerik dan status ('completed'/'pending') dari teks nilai."""
+    if not grade_text or grade_text.strip() == "-":
+        return None, "pending"
+    match = re.search(r'\d+(?:[.,]\d+)?', grade_text.strip())
+    if not match:
+        return None, "pending"
+    val = float(match.group(0).replace(',', '.'))
+    score = int(val) if val.is_integer() else val
+    return score, "completed"
 
 def parse_post_author_and_nim(author_raw: str, content: str) -> Tuple[str, str]:
     """Mengekstrak nama bersih dan NIM 9 digit dari header/konten."""
@@ -109,7 +124,7 @@ async def scrape_session_assign(page: Page, course_id: str, session_num: int) ->
     }''')
 
     # 2. Buka daftar pengumpulan yang butuh dinilai (action=grading)
-    grading_url = f"https://elearning.ut.ac.id/mod/assign/view.php?id={cmid}&action=grading"
+    grading_url = build_assignment_grading_url(cmid, perpage=100)
     print(f"[SCRAPER] Membuka tabel grading tugas: {grading_url}...")
     await page.goto(grading_url, wait_until="domcontentloaded")
     await page.wait_for_timeout(2500)
@@ -126,14 +141,27 @@ async def scrape_session_assign(page: Page, course_id: str, session_num: int) ->
 
             if (userLink && statusCell) {
                 const name = userLink.innerText.trim();
-                const status = statusCell.innerText.trim();
                 const gradeText = gradeCell ? gradeCell.innerText.trim() : "";
                 const fileText = fileCell ? fileCell.innerText.trim().replace(/\\s+/g, " ") : "";
                 const feedbackText = feedbackCell ? feedbackCell.innerText.trim() : "";
 
+                let score = null;
+                let status = "pending";
+                if (gradeText && gradeText !== "-") {
+                    const match = gradeText.match(/[0-9]+([.,][0-9]+)?/);
+                    if (match) {
+                        const parsed = parseFloat(match[0].replace(",", "."));
+                        if (!isNaN(parsed)) {
+                            score = Number.isInteger(parsed) ? parseInt(parsed, 10) : parsed;
+                            status = "completed";
+                        }
+                    }
+                }
+
                 list.push({
                     author: name,
                     status: status,
+                    score: score,
                     gradeText: gradeText,
                     fileText: fileText,
                     feedbackText: feedbackText
@@ -142,6 +170,13 @@ async def scrape_session_assign(page: Page, course_id: str, session_num: int) ->
         });
         return list;
     }''')
+
+    for s in students:
+        if s.get("score") is None:
+            parsed_score, parsed_status = parse_assignment_grade_and_status(s.get("gradeText", ""))
+            if parsed_score is not None:
+                s["score"] = parsed_score
+                s["status"] = parsed_status
 
     print(f"[SCRAPER] Berhasil mengekstrak {len(students)} mahasiswa pada {course_info['name']} Tugas Sesi {session_num}")
     return {
