@@ -23,6 +23,10 @@ COURSES = [
         "forums": {
             1: {"cmid": "47302993", "name": "Forum Diskusi.1"},
             2: {"cmid": "47303004", "name": "Forum Diskusi.2"},
+            4: {"cmid": "47303026", "name": "Forum Diskusi.4"},
+        },
+        "assignments": {
+            3: {"cmid": "47303015", "name": "Tugas.1"},
         }
     },
     {
@@ -32,6 +36,10 @@ COURSES = [
         "forums": {
             1: {"cmid": "47303711", "name": "Forum Diskusi.1"},
             2: {"cmid": "47303722", "name": "Forum Diskusi.2"},
+            4: {"cmid": "47303744", "name": "Forum Diskusi.4"},
+        },
+        "assignments": {
+            3: {"cmid": "47303733", "name": "Tugas.1"},
         }
     },
     {
@@ -41,6 +49,10 @@ COURSES = [
         "forums": {
             1: {"cmid": "47304429", "name": "Forum Diskusi.1"},
             2: {"cmid": "47304452", "name": "Forum Diskusi.2"},
+            4: {"cmid": "47304490", "name": "Forum Diskusi.4"},
+        },
+        "assignments": {
+            3: {"cmid": "47304472", "name": "Tugas.1"},
         }
     },
     {
@@ -50,6 +62,10 @@ COURSES = [
         "forums": {
             1: {"cmid": "46978721", "name": "Forum Diskusi.1"},
             2: {"cmid": "46978750", "name": "Forum Diskusi.2"},
+            4: {"cmid": "46978799", "name": "Forum Diskusi.4"},
+        },
+        "assignments": {
+            3: {"cmid": "46978783", "name": "Tugas.1"},
         }
     }
 ]
@@ -66,3 +82,10 @@ def get_forum_cmid(course_id: str, session_num: int):
         return None
     forum = c.get("forums", {}).get(int(session_num))
     return forum["cmid"] if forum else None
+
+def get_assign_cmid(course_id: str, session_num: int):
+    c = get_course_info(course_id)
+    if not c:
+        return None
+    assign = c.get("assignments", {}).get(int(session_num))
+    return assign["cmid"] if assign else None

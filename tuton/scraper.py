@@ -1,7 +1,7 @@
 import re
 from typing import Dict, Any, List, Tuple
 from playwright.async_api import Page
-from tuton.config import get_course_info, get_forum_cmid, COURSES
+from tuton.config import get_course_info, get_forum_cmid, get_assign_cmid, COURSES
 from tuton.matcher import clean_student_name
 
 def build_flat_topic_url(raw_topic_url: str) -> str:
@@ -81,3 +81,72 @@ async def scrape_session_forum(page: Page, course_id: str, session_num: int) -> 
 
     print(f"[SCRAPER] Berhasil mengekstrak {len(posts)} postingan dari {course_info['name']} Sesi {session_num}")
     return {"course": course_info, "session": session_num, "posts": posts}
+
+async def scrape_session_assign(page: Page, course_id: str, session_num: int) -> Dict[str, Any]:
+    """Menarik seluruh pengumpulan tugas (assignment) suatu sesi untuk kelas tertentu."""
+    cmid = get_assign_cmid(course_id, session_num)
+    course_info = get_course_info(course_id)
+    if not cmid or not course_info:
+        raise ValueError(f"Konfigurasi tugas tidak ditemukan untuk course {course_id} sesi {session_num}")
+
+    # 1. Buka ringkasan penugasan
+    assign_url = f"https://elearning.ut.ac.id/mod/assign/view.php?id={cmid}"
+    print(f"[SCRAPER] Membuka {course_info['name']} Tugas Sesi {session_num} ({assign_url})...")
+    await page.goto(assign_url, wait_until="domcontentloaded")
+    await page.wait_for_timeout(2500)
+
+    summary = await page.evaluate('''() => {
+        const rows = Array.from(document.querySelectorAll("table.generaltable tr"));
+        let res = {};
+        rows.forEach(tr => {
+            const th = tr.querySelector("th");
+            const td = tr.querySelector("td");
+            if (th && td) {
+                res[th.innerText.trim()] = td.innerText.trim();
+            }
+        });
+        return res;
+    }''')
+
+    # 2. Buka daftar pengumpulan yang butuh dinilai (action=grading)
+    grading_url = f"https://elearning.ut.ac.id/mod/assign/view.php?id={cmid}&action=grading"
+    print(f"[SCRAPER] Membuka tabel grading tugas: {grading_url}...")
+    await page.goto(grading_url, wait_until="domcontentloaded")
+    await page.wait_for_timeout(2500)
+
+    students = await page.evaluate('''() => {
+        const trs = Array.from(document.querySelectorAll("table.generaltable tbody tr"));
+        let list = [];
+        trs.forEach(tr => {
+            const userLink = tr.querySelector("td.cell.c2 a, td.fullname a, td:nth-child(3) a");
+            const statusCell = tr.querySelector("td.cell.c4, td.status");
+            const gradeCell = tr.querySelector("td.cell.c5, td.grade");
+            const fileCell = tr.querySelector("td.cell.c8, td.files");
+            const feedbackCell = tr.querySelector("td.cell.c10, td.feedback");
+
+            if (userLink && statusCell) {
+                const name = userLink.innerText.trim();
+                const status = statusCell.innerText.trim();
+                const gradeText = gradeCell ? gradeCell.innerText.trim() : "";
+                const fileText = fileCell ? fileCell.innerText.trim().replace(/\\s+/g, " ") : "";
+                const feedbackText = feedbackCell ? feedbackCell.innerText.trim() : "";
+
+                list.push({
+                    author: name,
+                    status: status,
+                    gradeText: gradeText,
+                    fileText: fileText,
+                    feedbackText: feedbackText
+                });
+            }
+        });
+        return list;
+    }''')
+
+    print(f"[SCRAPER] Berhasil mengekstrak {len(students)} mahasiswa pada {course_info['name']} Tugas Sesi {session_num}")
+    return {
+        "course": course_info,
+        "session": session_num,
+        "summary": summary,
+        "submissions": students
+    }

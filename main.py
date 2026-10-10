@@ -4,7 +4,7 @@ import os
 from playwright.async_api import async_playwright
 from tuton.config import COURSES, CHROME_PATH, SESSION_FILE
 from tuton.auth import ensure_authenticated_page
-from tuton.scraper import scrape_session_forum, parse_post_author_and_nim
+from tuton.scraper import scrape_session_forum, scrape_session_assign, parse_post_author_and_nim
 from tuton.matcher import match_feedbacks_to_students
 from tuton.evaluator import evaluate_submission
 from tuton.reporter import (
@@ -20,7 +20,10 @@ async def run_pipeline(session_target: str = "all", mode: str = "full"):
     mode='grade': Tahap 2 saja (Nilai & Feedback)
     mode='full': Tahap 1 kemudian Tahap 2
     """
-    sessions = [1, 2] if session_target == "all" else [int(session_target)]
+    if session_target == "all":
+        sessions = [1, 2, 3, 4]
+    else:
+        sessions = [int(session_target)]
 
     async with async_playwright() as p:
         browser = await p.chromium.launch(executable_path=CHROME_PATH, headless=True)
@@ -39,72 +42,124 @@ async def run_pipeline(session_target: str = "all", mode: str = "full"):
 
         for s_num in sessions:
             class_summaries = []
+            is_assignment = s_num in [3, 5, 7]
+
             for c in COURSES:
                 cid = c["id"]
-                raw_data = await scrape_session_forum(page, cid, s_num)
-                posts = raw_data["posts"]
 
-                topic_post = posts[0] if posts else None
-                tutor_posts = [p for p in posts[1:] if "ainur" in p["author"].lower() or "01007726" in p["author"]]
-                student_raw = [p for p in posts[1:] if p not in tutor_posts]
+                if is_assignment:
+                    # Pipeline untuk Tugas (Assignment)
+                    raw_data = await scrape_session_assign(page, cid, s_num)
+                    summary = raw_data.get("summary", {})
+                    submissions = raw_data.get("submissions", [])
 
-                # Deduplikasi mahasiswa
-                student_map = {}
-                for sp in student_raw:
-                    cname, nim = parse_post_author_and_nim(sp["author"], sp["content"])
-                    key = nim if nim else cname.lower()
-                    score = sp["rating"] if sp["rating"] and sp["rating"] not in ["-1", "-999", "0", ""] else None
-                    if key not in student_map:
-                        student_map[key] = {
+                    try:
+                        total_submitted = int(summary.get("Submitted", len(submissions)))
+                    except ValueError:
+                        total_submitted = len(submissions)
+
+                    try:
+                        needs_grading = int(summary.get("Needs grading", len(submissions)))
+                    except ValueError:
+                        needs_grading = len(submissions)
+
+                    completed_count = max(0, total_submitted - needs_grading)
+
+                    pending_students = []
+                    for s in submissions:
+                        cname, nim = parse_post_author_and_nim(s["author"], "")
+                        status_desc = f"Tugas diunggah ({s.get('fileText', 'Berkas')[:40]}), butuh nilai & feedback"
+                        eval_res = evaluate_submission(cname, "", s_num)
+                        
+                        student_obj = {
                             "name": cname,
                             "nim": nim,
-                            "postId": sp["postId"],
-                            "score": score,
-                            "content": sp["content"],
-                            "feedback": None
+                            "course_name": c["name"],
+                            "session": s_num,
+                            "score": eval_res["score"],
+                            "status_desc": status_desc,
+                            "feedback": eval_res["feedback"]
                         }
-                    else:
-                        if not student_map[key]["score"] and score:
-                            student_map[key]["score"] = score
-                        if len(sp["content"]) > len(student_map[key]["content"]):
-                            student_map[key]["content"] = sp["content"]
+                        pending_students.append(student_obj)
+                        all_evaluations.append(student_obj)
 
-                # Rekonsiliasi feedback
-                matched_students = match_feedbacks_to_students(list(student_map.values()), tutor_posts)
-                matched_students.sort(key=lambda x: x["name"])
-
-                completed = [s for s in matched_students if s["score"] and s["feedback"]]
-                pending = [s for s in matched_students if not (s["score"] and s["feedback"])]
-
-                class_summaries.append({
-                    "name": c["name"],
-                    "code": c["code"],
-                    "total": len(matched_students),
-                    "completed": len(completed),
-                    "pending": len(pending)
-                })
-
-                group_key = f"Sesi {s_num} — {c['name']} ({c['code']})"
-                all_pending_grouped[group_key] = pending
-
-                # Siapkan evaluasi draf nilai & feedback untuk mahasiswa yang pending
-                for ps in pending:
-                    status_desc = "Belum ada nilai & belum ada feedback"
-                    if ps["score"] and not ps["feedback"]:
-                        status_desc = f"Sudah ada nilai ({ps['score']}), butuh teks feedback"
-                    elif not ps["score"] and ps["feedback"]:
-                        status_desc = "Sudah ada feedback, butuh input nilai di web"
-
-                    eval_res = evaluate_submission(ps["name"], ps["content"], s_num)
-                    all_evaluations.append({
-                        "name": eval_res["name"],
-                        "nim": ps.get("nim"),
-                        "course_name": c["name"],
-                        "session": s_num,
-                        "score": ps["score"] if ps["score"] else eval_res["score"],
-                        "status_desc": status_desc,
-                        "feedback": eval_res["feedback"]
+                    class_summaries.append({
+                        "name": f"{c['name']} (Tugas)",
+                        "code": c["code"],
+                        "total": total_submitted,
+                        "completed": completed_count,
+                        "pending": len(pending_students)
                     })
+
+                    group_key = f"Sesi {s_num} (Tugas {(s_num - 1) // 2}) — {c['name']} ({c['code']})"
+                    all_pending_grouped[group_key] = pending_students
+
+                else:
+                    # Pipeline untuk Forum Diskusi
+                    raw_data = await scrape_session_forum(page, cid, s_num)
+                    posts = raw_data["posts"]
+
+                    topic_post = posts[0] if posts else None
+                    tutor_posts = [p for p in posts[1:] if "ainur" in p["author"].lower() or "01007726" in p["author"]]
+                    student_raw = [p for p in posts[1:] if p not in tutor_posts]
+
+                    # Deduplikasi mahasiswa
+                    student_map = {}
+                    for sp in student_raw:
+                        cname, nim = parse_post_author_and_nim(sp["author"], sp["content"])
+                        key = nim if nim else cname.lower()
+                        score = sp["rating"] if sp["rating"] and sp["rating"] not in ["-1", "-999", "0", ""] else None
+                        if key not in student_map:
+                            student_map[key] = {
+                                "name": cname,
+                                "nim": nim,
+                                "postId": sp["postId"],
+                                "score": score,
+                                "content": sp["content"],
+                                "feedback": None
+                            }
+                        else:
+                            if not student_map[key]["score"] and score:
+                                student_map[key]["score"] = score
+                            if len(sp["content"]) > len(student_map[key]["content"]):
+                                student_map[key]["content"] = sp["content"]
+
+                    # Rekonsiliasi feedback
+                    matched_students = match_feedbacks_to_students(list(student_map.values()), tutor_posts)
+                    matched_students.sort(key=lambda x: x["name"])
+
+                    completed = [s for s in matched_students if s["score"] and s["feedback"]]
+                    pending = [s for s in matched_students if not (s["score"] and s["feedback"])]
+
+                    class_summaries.append({
+                        "name": c["name"],
+                        "code": c["code"],
+                        "total": len(matched_students),
+                        "completed": len(completed),
+                        "pending": len(pending)
+                    })
+
+                    group_key = f"Sesi {s_num} — {c['name']} ({c['code']})"
+                    all_pending_grouped[group_key] = pending
+
+                    # Siapkan evaluasi draf nilai & feedback untuk mahasiswa yang pending
+                    for ps in pending:
+                        status_desc = "Belum ada nilai & belum ada feedback"
+                        if ps["score"] and not ps["feedback"]:
+                            status_desc = f"Sudah ada nilai ({ps['score']}), butuh teks feedback"
+                        elif not ps["score"] and ps["feedback"]:
+                            status_desc = "Sudah ada feedback, butuh input nilai di web"
+
+                        eval_res = evaluate_submission(ps["name"], ps["content"], s_num)
+                        all_evaluations.append({
+                            "name": eval_res["name"],
+                            "nim": ps.get("nim"),
+                            "course_name": c["name"],
+                            "session": s_num,
+                            "score": ps["score"] if ps["score"] else eval_res["score"],
+                            "status_desc": status_desc,
+                            "feedback": eval_res["feedback"]
+                        })
 
             summary_table_data.append({"session": s_num, "classes": class_summaries})
 
@@ -133,7 +188,7 @@ async def run_pipeline(session_target: str = "all", mode: str = "full"):
 
 def main():
     parser = argparse.ArgumentParser(description="UT Tuton Automation & Evaluation Assistant")
-    parser.add_argument("--session", choices=["1", "2", "all"], default="all", help="Pilih sesi yang diproses (1, 2, atau all)")
+    parser.add_argument("--session", choices=["1", "2", "3", "4", "all"], default="all", help="Pilih sesi yang diproses (1, 2, 3, 4, atau all)")
     parser.add_argument("--mode", choices=["recap", "grade", "full"], default="full", help="recap: ringkasan saja; grade: nilai & feedback; full: keduanya")
     args = parser.parse_args()
 

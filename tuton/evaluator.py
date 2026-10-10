@@ -54,7 +54,7 @@ def evaluate_submission(student_name: str, content: str, session_num: int) -> Di
             f"Pertahankan antusiasme, ketelitian, dan cara berpikir kritis ini pada sesi-sesi diskusi berikutnya!"
         )
 
-    else:
+    elif session_num == 2:
         # Rubrik Sesi 2: Keterpaduan 4 Keterampilan, Teori Frank Smith, Tiga Tahapan Menulis
         has_keterampilan = all(k in c_lower for k in ["menyimak", "berbicara", "membaca", "menulis"]) or all(k in c_lower for k in ["ayu", "budi", "cinta", "dani"])
         has_smith = "smith" in c_lower
@@ -95,6 +95,86 @@ def evaluate_submission(student_name: str, content: str, session_num: int) -> Di
         p2 = (
             f"Sebagai catatan penyempurnaan ke depan, Saudara dapat lebih memperkuat analisis dengan {saran_str}. "
             f"Secara keseluruhan argumentasi Saudara sudah sangat baik, pertahankan daya kritis dan keaktifan ini pada sesi-sesi selanjutnya!"
+        )
+
+    elif session_num == 3:
+        # Rubrik Sesi 3 (Tugas 1): Kedudukan Bahasa Nasional vs Bahasa Negara & UU No. 24 Tahun 2009
+        has_nasional_negara = "nasional" in c_lower and "negara" in c_lower
+        has_sumpah_pemuda = any(k in c_lower for k in ["sumpah pemuda", "1928", "kebanggaan", "identitas"])
+        has_uud45 = any(k in c_lower for k in ["uud 1945", "uud '45", "pasal 36", "resmi kenegaraan"])
+        has_uu24 = any(k in c_lower for k in ["24 tahun 2009", "uu no 24", "uu 24", "undang-undang"])
+        has_pemersatu = any(k in c_lower for k in ["pemersatu", "persatuan", "komunikasi antardaerah"])
+        has_paragraf = len(content.strip().split("\n")) >= 2 or len(content.strip()) >= 200
+        has_bmp = "mkwn4108" in c_lower or "bmp" in c_lower or "modul" in c_lower
+
+        score = 80
+        if has_nasional_negara: score += 3
+        if has_sumpah_pemuda: score += 2
+        if has_uud45: score += 2
+        if has_uu24: score += 3
+        if has_pemersatu: score += 2
+        if has_paragraf: score += 2
+        if has_bmp: score += 2
+
+        score = min(max(score, 82), 95)
+
+        p1 = (
+            f"Halo {name}, terima kasih atas pengunggahan Tugas 1 yang telah Saudara susun dengan sangat baik "
+            f"dan terstruktur. Keunggulan jawaban Saudara tampak pada ketepatan membedakan fungsi bahasa Indonesia "
+            f"sebagai bahasa nasional (berlandaskan peristiwa historis Sumpah Pemuda 1928) dan sebagai bahasa negara "
+            f"(berdasarkan ketentuan yuridis Pasal 36 UUD 1945). Saudara juga berhasil mengutip butir fungsi bahasa "
+            f"persatuan dalam UU No. 24 Tahun 2009 serta menguraikan maknanya ke dalam susunan paragraf yang kohesif dan runtut."
+        )
+
+        catatan = []
+        if not has_uud45:
+            catatan.append("mempertegas rujukan yuridis Pasal 36 UUD 1945 pada fungsi bahasa negara")
+        if not has_bmp:
+            catatan.append("mencantumkan referensi resmi BMP MKWN4108 Modul 1/2 UT")
+
+        saran_str = " dan ".join(catatan) if catatan else "memberikan contoh konkret penerapan fungsi bahasa negara dalam naskah administrasi pemerintahan"
+
+        p2 = (
+            f"Sebagai catatan penyempurnaan ke depan, Saudara dapat lebih melengkapi ulasan dengan {saran_str}. "
+            f"Pertahankan ketelitian, penalaran ilmiah yang kritis, dan motivasi belajar yang tinggi untuk tugas-tugas selanjutnya!"
+        )
+
+    else:
+        # Rubrik Sesi 4 (Diskusi 4): Ciri Kalimat Efektif, Pleonasme Pohon Tabebuya Bojonegoro & Perbaikan Kalimat
+        has_pleonasme = any(k in c_lower for k in ["pleonasme", "pemborosan", "kehematan", "hemat", "mubazir", "berlebihan"])
+        has_ciri = any(k in c_lower for k in ["kehematan", "kelogisan", "keparalelan", "ketegasan", "kesepadanan", "kecermatan"])
+        has_perbaikan = any(k in c_lower for k in ["perbaikan", "banyak pohon", "pohon-pohon", "banyak bunga", "bunga-bunga", "seharusnya"])
+        has_tabebuya = "tabebuya" in c_lower or "bojonegoro" in c_lower
+        has_bmp = "mkwn4108" in c_lower or "bmp" in c_lower or "modul" in c_lower
+
+        score = 80
+        if has_pleonasme: score += 4
+        if has_ciri: score += 3
+        if has_perbaikan: score += 4
+        if has_tabebuya: score += 2
+        if has_bmp: score += 2
+
+        score = min(max(score, 82), 95)
+
+        p1 = (
+            f"Halo {name}, terima kasih atas partisipasi aktif Saudara dalam Forum Diskusi 4 ini. "
+            f"Analisis yang Saudara paparkan sudah sangat baik dan tajam, khususnya dalam mengidentifikasi ketidakefektifan "
+            f"kalimat [1] dan [2] pada teks pohon Tabebuya di Bojonegoro. Saudara tepat menjelaskan bahwa perulangan bentuk jamak "
+            f"(pleonasme) pada frasa tersebut melanggar prinsip kehematan kata, serta mampu memberikan formulasi perbaikan "
+            f"kalimat yang jauh lebih efektif, lugas, dan sesuai kaidah tata bahasa baku."
+        )
+
+        catatan = []
+        if not has_ciri:
+            catatan.append("memperjelas prinsip kehematan kata di samping prinsip kelogisan dan kesepadanan struktur")
+        if not has_bmp:
+            catatan.append("menyertakan rujukan BMP MKWN4108 Modul 4/5 UT sebagai dasar teori penyuntingan kalimat")
+
+        saran_str = " serta ".join(catatan) if catatan else "mengulas lebih lanjut aspek keparalelan bentuk pada analisis kalimat berikutnya"
+
+        p2 = (
+            f"Sebagai catatan penyempurnaan ke depan, Saudara dapat lebih memperkuat analisis dengan {saran_str}. "
+            f"Pertahankan kecermatan berbahasa dan cara berpikir analitis ini pada sesi-sesi diskusi mendatang!"
         )
 
     return {
