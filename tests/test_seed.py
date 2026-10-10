@@ -40,3 +40,34 @@ def test_seed_from_markdown_reports():
     finally:
         if test_db_path.exists():
             test_db_path.unlink()
+
+
+@pytest.fixture
+def test_db(tmp_path):
+    db_file = tmp_path / "test_tuton.db"
+    db = Database(db_path=db_file)
+    db.init_db()
+    return db
+
+
+def test_seed_session3_and_session4_ground_truth(test_db):
+    from tuton.seed_db import seed_from_markdown_reports
+    seed_from_markdown_reports(test_db)
+    metrics = test_db.get_recap_metrics()
+
+    # Sesi 3: 150 total, 134 completed, 16 pending
+    s3_total = sum(metrics["matrix"][cid][3]["total"] for cid in metrics["matrix"])
+    s3_completed = sum(metrics["matrix"][cid][3]["completed"] for cid in metrics["matrix"])
+    s3_pending = sum(metrics["matrix"][cid][3]["pending"] for cid in metrics["matrix"])
+    assert s3_total == 150
+    assert s3_completed == 134
+    assert s3_pending == 16
+
+    # Sesi 4: 125 total, 12 completed, 113 pending
+    s4_total = sum(metrics["matrix"][cid][4]["total"] for cid in metrics["matrix"])
+    s4_completed = sum(metrics["matrix"][cid][4]["completed"] for cid in metrics["matrix"])
+    s4_pending = sum(metrics["matrix"][cid][4]["pending"] for cid in metrics["matrix"])
+    assert s4_total == 125
+    assert s4_completed == 12
+    assert s4_pending == 113
+
