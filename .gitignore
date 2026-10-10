@@ -37,4 +37,5 @@ check_*.py
 inspect_*.py
 parse_*.py
 get_*.py
-test_*.py
+/test_*.py
+!tests/**
