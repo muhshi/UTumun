@@ -95,7 +95,7 @@ def parse_markdown_report(file_path: Union[str, Path]) -> List[Dict[str, Any]]:
         elif "belum" in status_raw.lower():
             status = "pending"
         else:
-            status = "completed" if score is not None and session_num != 4 else "pending"
+            status = "completed" if score is not None and fb else "pending"
 
         if nim and cid:
             results.append({

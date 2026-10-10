@@ -344,29 +344,29 @@ class MySQLDatabase:
             current_sub = student_subs.get(session_num) if session_num is not None else None
 
             if session_num is not None:
-                if status == "completed":
-                    if not (current_sub and current_sub.get("score") is not None and current_sub.get("feedback")):
-                        continue
-                elif status in ["pending", "draft"]:
-                    if current_sub and current_sub.get("score") is not None and current_sub.get("feedback"):
-                        continue
+                current_sub = next((s for s in student_subs.values() if s["session_num"] == session_num), None)
+                if current_sub is None:
+                    continue
+                current_score = current_sub.get("score")
+                previous_score: Optional[int] = None
+                for prev_s in range(session_num - 1, 0, -1):
+                    if prev_s in student_subs and student_subs[prev_s].get("score") is not None:
+                        previous_score = student_subs[prev_s]["score"]
+                        break
+            else:
+                current_sub = student_subs[max(student_subs.keys())] if student_subs else None
+                current_score = current_sub.get("score") if current_sub else None
+                prev_scored = [
+                    s for s in sorted(student_subs.values(), key=lambda x: x["session_num"])[:-1]
+                    if s.get("score") is not None
+                ] if len(student_subs) > 1 else []
+                previous_score = prev_scored[-1]["score"] if prev_scored else None
 
             trajectory: List[Dict[str, Any]] = []
             for s_idx in sorted(student_subs.keys()):
                 sc = student_subs[s_idx].get("score")
                 if sc is not None:
                     trajectory.append({"session": s_idx, "score": sc})
-
-            current_score = current_sub.get("score") if current_sub else None
-            previous_score: Optional[int] = None
-            if session_num is not None:
-                for prev_s in range(session_num - 1, 0, -1):
-                    if prev_s in student_subs and student_subs[prev_s].get("score") is not None:
-                        previous_score = student_subs[prev_s]["score"]
-                        break
-            else:
-                if len(trajectory) >= 2:
-                    previous_score = trajectory[-2]["score"]
 
             warning_lower_score = bool(
                 current_score is not None
@@ -375,10 +375,22 @@ class MySQLDatabase:
             )
 
             suggested_score = suggest_grade(previous_score)
-            is_copied = current_sub["is_copied"] if current_sub else 0
-            is_grade_copied = current_sub["is_grade_copied"] if current_sub else 0
-            feedback = current_sub["feedback"] if current_sub else None
-            sub_status = current_sub["status"] if current_sub else "pending"
+            is_copied = current_sub.get("is_copied", 0) if current_sub else 0
+            is_grade_copied = current_sub.get("is_grade_copied", 0) if current_sub else 0
+            feedback = current_sub.get("feedback") if current_sub else None
+
+            if is_copied == 1:
+                item_status = "copied"
+            elif current_score is not None and feedback:
+                item_status = "completed"
+            else:
+                item_status = "pending"
+
+            if status:
+                if status == "completed" and item_status not in ["completed", "copied"]:
+                    continue
+                elif status in ["pending", "draft"] and item_status in ["completed", "copied"]:
+                    continue
 
             results.append({
                 "nim": st["nim"],
@@ -393,7 +405,7 @@ class MySQLDatabase:
                 "is_copied": is_copied,
                 "is_grade_copied": is_grade_copied,
                 "feedback": feedback,
-                "status": sub_status,
+                "status": item_status,
                 "submission": current_sub,
             })
 
@@ -405,9 +417,6 @@ class MySQLDatabase:
         submissions = self.get_submissions()
 
         total_students = len(students)
-        students_by_course: Dict[str, List[Dict[str, Any]]] = {}
-        for st in students:
-            students_by_course.setdefault(st["course_id"], []).append(st)
 
         subs_by_cs: Dict[tuple, List[Dict[str, Any]]] = {}
         for sub in submissions:
@@ -421,22 +430,21 @@ class MySQLDatabase:
         for c in courses:
             cid = c["id"]
             matrix[cid] = {}
-            course_students = students_by_course.get(cid, [])
-            total_students_in_course = len(course_students)
 
             for s_num in range(1, 9):
                 cs_subs = subs_by_cs.get((cid, s_num), [])
                 completed_subs = [s for s in cs_subs if s.get("score") is not None]
                 completed_count = len(completed_subs)
-                pending_count = max(0, total_students_in_course - completed_count)
-                rate = round(completed_count / total_students_in_course * 100, 2) if total_students_in_course > 0 else 0.0
+                total_in_session = len(cs_subs)
+                pending_count = max(0, total_in_session - completed_count)
+                rate = round(completed_count / total_in_session * 100, 2) if total_in_session > 0 else 0.0
 
                 matrix[cid][s_num] = {
                     "course_id": cid,
                     "session_num": s_num,
                     "completed": completed_count,
                     "pending": pending_count,
-                    "total": total_students_in_course,
+                    "total": total_in_session,
                     "rate": rate,
                 }
                 total_completed += completed_count

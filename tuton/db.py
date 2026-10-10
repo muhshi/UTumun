@@ -340,6 +340,8 @@ class Database:
         self,
         course_id: Optional[str] = None,
         session_num: Optional[int] = None,
+        status: Optional[str] = None,
+        search: Optional[str] = None,
     ) -> List[Dict[str, Any]]:
         """Mengambil daftar mahasiswa lengkap dengan lintasan nilai (trajectory) antar-sesi,
         peringatan jika nilai turun (warning_lower_score), dan rekomendasi nilai otomatis.
@@ -356,6 +358,14 @@ class Database:
         results: List[Dict[str, Any]] = []
 
         for st in students:
+            nim = st["nim"]
+            name = st["name"]
+
+            if search:
+                s_lower = search.lower().strip()
+                if s_lower not in nim.lower() and s_lower not in name.lower():
+                    continue
+
             key = (st["nim"], st["course_id"])
             st_subs = sorted(
                 subs_by_student.get(key, []),
@@ -371,7 +381,10 @@ class Database:
 
             if session_num is not None:
                 current_sub = next((s for s in st_subs if s["session_num"] == session_num), None)
-                current_score = current_sub["score"] if current_sub else None
+                # Hanya tampilkan mahasiswa yang aktif berpartisipasi/mengumpulkan pada sesi ini
+                if current_sub is None:
+                    continue
+                current_score = current_sub.get("score")
 
                 # Nilai sesi sebelumnya (sesi paling akhir sebelum session_num yang bernilai)
                 prev_scored = [
@@ -381,7 +394,7 @@ class Database:
                 previous_score = prev_scored[-1]["score"] if prev_scored else None
             else:
                 current_sub = st_subs[-1] if st_subs else None
-                current_score = current_sub["score"] if current_sub else None
+                current_score = current_sub.get("score") if current_sub else None
 
                 prev_scored = [
                     s for s in st_subs[:-1]
@@ -398,10 +411,22 @@ class Database:
 
             suggested_score = suggest_grade(previous_score)
 
-            is_copied = current_sub["is_copied"] if current_sub else 0
-            is_grade_copied = current_sub["is_grade_copied"] if current_sub else 0
-            feedback = current_sub["feedback"] if current_sub else None
-            status = current_sub["status"] if current_sub else "pending"
+            is_copied = current_sub.get("is_copied", 0) if current_sub else 0
+            is_grade_copied = current_sub.get("is_grade_copied", 0) if current_sub else 0
+            feedback = current_sub.get("feedback") if current_sub else None
+
+            if is_copied == 1:
+                item_status = "copied"
+            elif current_score is not None and feedback:
+                item_status = "completed"
+            else:
+                item_status = "pending"
+
+            if status:
+                if status == "completed" and item_status not in ["completed", "copied"]:
+                    continue
+                elif status in ["pending", "draft"] and item_status in ["completed", "copied"]:
+                    continue
 
             results.append({
                 "nim": st["nim"],
@@ -416,7 +441,7 @@ class Database:
                 "is_copied": is_copied,
                 "is_grade_copied": is_grade_copied,
                 "feedback": feedback,
-                "status": status,
+                "status": item_status,
                 "submission": current_sub,
             })
 
@@ -429,11 +454,6 @@ class Database:
         submissions = self.get_submissions()
 
         total_students = len(students)
-
-        # Kelompokkan mahasiswa per course_id
-        students_by_course: Dict[str, List[Dict[str, Any]]] = {}
-        for st in students:
-            students_by_course.setdefault(st["course_id"], []).append(st)
 
         # Kelompokkan submission per (course_id, session_num)
         subs_by_cs: Dict[tuple, List[Dict[str, Any]]] = {}
@@ -448,23 +468,22 @@ class Database:
         for c in courses:
             cid = c["id"]
             matrix[cid] = {}
-            course_students = students_by_course.get(cid, [])
-            total_students_in_course = len(course_students)
 
             for s_num in range(1, 9):
                 cs_subs = subs_by_cs.get((cid, s_num), [])
                 # Selesai = memiliki nilai (score tidak None)
                 completed_subs = [s for s in cs_subs if s.get("score") is not None]
                 completed_count = len(completed_subs)
-                pending_count = max(0, total_students_in_course - completed_count)
-                rate = round(completed_count / total_students_in_course * 100, 2) if total_students_in_course > 0 else 0.0
+                total_in_session = len(cs_subs)
+                pending_count = max(0, total_in_session - completed_count)
+                rate = round(completed_count / total_in_session * 100, 2) if total_in_session > 0 else 0.0
 
                 matrix[cid][s_num] = {
                     "course_id": cid,
                     "session_num": s_num,
                     "completed": completed_count,
                     "pending": pending_count,
-                    "total": total_students_in_course,
+                    "total": total_in_session,
                     "rate": rate,
                 }
                 total_completed += completed_count
