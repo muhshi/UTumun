@@ -73,7 +73,28 @@ def match_feedbacks_to_students(students: List[Dict[str, Any]], tutor_posts: Lis
             if best_score >= 1:
                 matched_idx = best_idx
 
+        # 4. Cek kutipan frasa spesifik dari postingan mahasiswa di dalam teks feedback
+        if matched_idx is None:
+            quotes = re.findall(r'["“]([^"”]+)["”]', content)
+            # Ambil kutipan yang unik (panjang >= 10 karakter)
+            unique_quotes = [q.strip().lower() for q in quotes if len(q.strip()) >= 10]
+            if unique_quotes:
+                for idx, s in enumerate(res_students):
+                    if s.get("feedback") is not None:
+                        continue
+                    s_content = s.get("content", "").lower()
+                    if any(uq in s_content for uq in unique_quotes):
+                        matched_idx = idx
+                        break
+
         if matched_idx is not None:
             res_students[matched_idx]["feedback"] = content
+
+    # 5. Fallback: jika hanya ada 1 mahasiswa yang punya nilai tapi belum ada feedback,
+    # dan terdapat feedback tutor yang belum terpetakan
+    unmatched_stus = [i for i, s in enumerate(res_students) if s.get("score") and not s.get("feedback")]
+    unmatched_fbs = [fb for fb in tutor_posts if not any(s.get("feedback") == fb.get("content") for s in res_students)]
+    if len(unmatched_stus) == 1 and len(unmatched_fbs) == 1:
+        res_students[unmatched_stus[0]]["feedback"] = unmatched_fbs[0].get("content")
 
     return res_students
