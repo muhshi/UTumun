@@ -31,9 +31,10 @@ Setiap draf *feedback* yang Anda hasilkan untuk mahasiswa **harus mengikuti atur
 ## 3. Alur Perintah Cepat (Quick Actions)
 Jika Ibu Tutor memberikan instruksi singkat, pahami maksudnya secara otomatis:
 - **"Siapkan sistem" / "Setup"**: Buat virtual environment, install dependensi `pip install -r requirements.txt`, pasang browser `playwright install chromium`, dan siapkan `.env`.
-- **"Cek Sesi 1"**: Jalankan pemindaian status penilaian 4 kelas untuk Forum Diskusi Sesi 1 via `scan_all_courses_direct.py` dan `run_robust_match.py`.
-- **"Cek Sesi 2"**: Jalankan pemindaian status pengumpulan mahasiswa Sesi 2 di 4 kelas via `scan_sesi2_all.py`.
-- **"Nilai Sesi 2"**: Evaluasi seluruh jawaban mahasiswa yang belum dinilai di Sesi 2 via `grade_all_sesi2_pending.py` dan tampilkan draf nilai serta feedback 2 paragraf siap salin.
+- **"Rekap semua sesi"**: Jalankan rekapitulasi status kelengkapan seluruh kelas Sesi 1 & 2 via `python main.py --mode recap`.
+- **"Cek Sesi 1"**: Jalankan rekapitulasi dan draf penilaian Sesi 1 via `python main.py --session 1 --mode full`.
+- **"Cek Sesi 2"**: Jalankan rekapitulasi dan draf penilaian Sesi 2 via `python main.py --session 2 --mode full`.
+- **"Beri nilai mahasiswa yang kurang"**: Jalankan pipeline terpadu dua tahap untuk mengevaluasi semua mahasiswa yang belum selesai via `python main.py --mode full`.
 
 ---
 

@@ -35,32 +35,30 @@ Automasi asisten Tutorial Online (Tuton) Universitas Terbuka (`elearning.ut.ac.i
    ```
    Isi `UT_USERNAME` dan `UT_PASSWORD` sesuai akun Tutor UT Anda.
 
-## Penggunaan
+## Penggunaan Terpadu (`main.py`)
 
-### 1. Sesi 1 (Hakikat & Sifat Bahasa)
-- **Pemindaian Forum Diskusi Sesi 1:**
-  ```bash
-  python scan_all_courses_direct.py
-  ```
-- **Analisis & Rekapitulasi Sesi 1:**
-  ```bash
-  python run_robust_match.py
-  ```
+Sistem dilengkapi antarmuka CLI tunggal dengan fitur **auto-relogin transparan** (otomatis login ulang ketika sesi kedaluwarsa tanpa menghentikan proses):
 
-### 2. Sesi 2 (Keterampilan Berbahasa)
-- **Unduh & Ekstrak Rubrik Resmi UT:**
-  ```bash
-  python download_rambu_requests.py
-  python read_rubrik_docx.py
-  ```
-- **Pemindaian Forum Diskusi Sesi 2 (4 Kelas):**
-  ```bash
-  python scan_sesi2_all.py
-  ```
-- **Evaluasi & Auto-Grader Sesi 2:**
-  ```bash
-  python grade_all_sesi2_pending.py
-  ```
+```bash
+# 1. Rekapitulasi status semua sesi (Tahap 1 saja: ringkasan tabel & daftar mahasiswa yang kurang)
+python main.py --mode recap
+
+# 2. Rekapitulasi dan generate draf nilai & feedback untuk Sesi 1 saja
+python main.py --session 1 --mode full
+
+# 3. Rekapitulasi dan generate draf nilai & feedback untuk Sesi 2 saja
+python main.py --session 2 --mode full
+
+# 4. Pipeline penuh (Semua sesi: Rekapitulasi status disusul draf nilai & feedback siap salin)
+python main.py --mode full
+```
+
+### Opsi CLI:
+- `--session {1,2,all}` : Memilih sesi forum yang diproses (default: `all`).
+- `--mode {recap,grade,full}` :
+  - `recap`: Hanya menampilkan tabel ringkasan dan daftar mahasiswa yang kurang.
+  - `grade`: Hanya menampilkan draf nilai dan feedback 2 paragraf untuk mahasiswa yang kurang.
+  - `full`: Menjalankan Tahap 1 (rekapitulasi status) lalu dilanjutkan Tahap 2 (draf nilai & feedback siap salin).
 
 ## Lisensi
 MIT License
