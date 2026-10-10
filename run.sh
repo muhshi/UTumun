@@ -31,5 +31,9 @@ else
     pip install -r requirements.txt
 fi
 
-# Jalankan dashboard
-python run_dashboard.py "$@"
+# Jalankan dashboard (default port 8020 jika tidak ditentukan)
+if [[ "$*" == *"--port"* ]]; then
+    python run_dashboard.py "$@"
+else
+    python run_dashboard.py --port 8020 "$@"
+fi
