@@ -43,11 +43,21 @@ templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
 
 # Dependency Injections
 def get_database() -> Database:
-    """Dependency provider untuk instance database."""
+    """Dependency provider untuk instance database dengan graceful fallback."""
     db = get_db()
-    # Pastikan tabel sudah terinisialisasi
-    db.init_db()
-    return db
+    try:
+        db.init_db()
+        return db
+    except Exception as e:
+        if getattr(config, "DB_ENGINE", "sqlite").lower() == "mysql":
+            import logging
+            logging.getLogger("tuton.db").warning(
+                f"[!] Gagal terhubung ke MySQL ({e}). Beralih otomatis ke SQLite lokal (data/tuton.db)."
+            )
+            local_db = Database()
+            local_db.init_db()
+            return local_db
+        raise
 
 
 def get_scanner() -> ScannerService:

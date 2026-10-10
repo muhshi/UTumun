@@ -72,12 +72,24 @@ def main(args_list=None):
     parser = build_parser()
     args = parser.parse_args(args_list)
 
-    # Siapkan database
+    # Siapkan database dengan graceful fallback
     db = get_db()
-    ensure_database_populated(db)
+    is_fallback = False
+    try:
+        ensure_database_populated(db)
+    except Exception as e:
+        if getattr(config, "DB_ENGINE", "sqlite").lower() == "mysql":
+            print(f"[!] Gagal terhubung ke MySQL ({e}).")
+            print("[!] Beralih otomatis (fallback) ke database SQLite lokal (data/tuton.db)...")
+            from tuton.db import Database
+            db = Database()
+            ensure_database_populated(db)
+            is_fallback = True
+        else:
+            raise
 
     db_display = "SQLite (data/tuton.db)"
-    if getattr(config, "DB_ENGINE", "sqlite").lower() == "mysql":
+    if getattr(config, "DB_ENGINE", "sqlite").lower() == "mysql" and not is_fallback:
         db_display = f"MySQL ({config.MYSQL_HOST}:{config.MYSQL_PORT}/{config.MYSQL_DATABASE})"
     elif hasattr(db, "db_path") and str(db.db_path) != ":memory:":
         try:
