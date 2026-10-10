@@ -21,22 +21,22 @@ async def perform_login(context: BrowserContext, page: Page) -> bool:
         raise ValueError("UT_USERNAME atau UT_PASSWORD belum diatur pada file .env")
 
     print("[AUTH] Memulai proses login MyUT...")
-    await page.goto("https://elearning.ut.ac.id/login/index.php", wait_until="domcontentloaded")
-    await page.wait_for_timeout(1500)
+    await page.goto("https://elearning.ut.ac.id/login/index.php", wait_until="networkidle")
+    await page.wait_for_timeout(2000)
 
     # Klik tombol login MyUT
     login_btn = page.locator("#btnLoginMyUT")
     if await login_btn.count() > 0:
         await login_btn.click()
-        await page.wait_for_timeout(1000)
+        await page.wait_for_timeout(1500)
 
-    # Pilih Tutor Eksternal
-    tutor_btn = page.locator("#btnTutorEksternal")
-    if await tutor_btn.count() > 0:
-        await tutor_btn.click()
-        await page.wait_for_timeout(1000)
+    # Tunggu modal pilihan dan klik Tutor Eksternal
+    await page.wait_for_selector("#btnTutorEksternal", state="visible", timeout=15000)
+    await page.click("#btnTutorEksternal")
+    await page.wait_for_timeout(1500)
 
-    # Isi credentials di modal
+    # Tunggu field username_modal
+    await page.wait_for_selector("#username_modal", state="visible", timeout=15000)
     await page.fill("#username_modal", UT_USERNAME)
     await page.fill("#password_modal", UT_PASSWORD)
 
