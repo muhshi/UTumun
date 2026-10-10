@@ -231,7 +231,7 @@ document.addEventListener('alpine:init', () => {
       if (this.statusFilter === 'pending') {
         list = list.filter(s => s.status === 'pending' || s.current_score === null || s.current_score === undefined);
       } else if (this.statusFilter === 'evaluated') {
-        list = list.filter(s => s.status === 'evaluated' && s.current_score !== null && s.current_score !== undefined);
+        list = list.filter(s => ['completed', 'evaluated', 'copied', 'graded'].includes(s.status) || (s.current_score !== null && s.current_score !== undefined && s.status !== 'pending'));
       }
 
       // Filter Pencarian Teks (Nama atau NIM)
@@ -257,7 +257,7 @@ document.addEventListener('alpine:init', () => {
       return this.students.filter(s => s.status === 'pending' || s.current_score === null || s.current_score === undefined).length;
     },
     get countEvaluated() {
-      return this.students.filter(s => s.status === 'evaluated' && s.current_score !== null && s.current_score !== undefined).length;
+      return this.students.filter(s => ['completed', 'evaluated', 'copied', 'graded'].includes(s.status) || (s.current_score !== null && s.current_score !== undefined && s.status !== 'pending')).length;
     },
 
     /**
