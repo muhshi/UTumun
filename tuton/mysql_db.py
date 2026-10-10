@@ -30,11 +30,11 @@ class MySQLDatabase:
         if not PYMYSQL_AVAILABLE:
             raise ImportError("Paket 'pymysql' tidak ditemukan. Jalankan: pip install pymysql")
 
-        self.host = host or getattr(config, "MYSQL_HOST", "10.133.21.24")
+        self.host = host or getattr(config, "MYSQL_HOST", "127.0.0.1")
         self.port = port or getattr(config, "MYSQL_PORT", 3306)
         self.user = user or getattr(config, "MYSQL_USER", "root")
-        self.password = password or getattr(config, "MYSQL_PASSWORD", "demak3321")
-        self.database = database or getattr(config, "MYSQL_DATABASE", "muhshi_utumun")
+        self.password = password or getattr(config, "MYSQL_PASSWORD", "")
+        self.database = database or getattr(config, "MYSQL_DATABASE", "tuton_db")
         self._lock = threading.Lock()
 
     @contextmanager

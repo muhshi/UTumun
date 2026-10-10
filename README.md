@@ -77,11 +77,11 @@ Cukup tambahkan variabel konfigurasi berikut ke file `.env` di server Anda:
 DB_ENGINE=mysql
 
 # Kredensial MySQL Server
-MYSQL_HOST=10.133.21.24
+MYSQL_HOST=127.0.0.1
 MYSQL_PORT=3306
 MYSQL_USER=root
-MYSQL_PASSWORD=demak3321
-MYSQL_DATABASE=muhshi_utumun
+MYSQL_PASSWORD=password_database_anda
+MYSQL_DATABASE=tuton_db
 ```
 
 Jika server database MySQL aktif, aplikasi akan otomatis membuat tabel-tabel yang diperlukan saat pertama kali dijalankan.

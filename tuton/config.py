@@ -17,11 +17,11 @@ TUTOR_ID = "01007726"
 
 # Database Configuration (Mendukung SQLite lokal dan MySQL server)
 DB_ENGINE = os.getenv("DB_ENGINE", "sqlite").lower()
-MYSQL_HOST = os.getenv("MYSQL_HOST", "10.133.21.24")
+MYSQL_HOST = os.getenv("MYSQL_HOST", "127.0.0.1")
 MYSQL_PORT = int(os.getenv("MYSQL_PORT", "3306"))
 MYSQL_USER = os.getenv("MYSQL_USER", "root")
-MYSQL_PASSWORD = os.getenv("MYSQL_PASSWORD", "demak3321")
-MYSQL_DATABASE = os.getenv("MYSQL_DATABASE", "muhshi_utumun")
+MYSQL_PASSWORD = os.getenv("MYSQL_PASSWORD", "")
+MYSQL_DATABASE = os.getenv("MYSQL_DATABASE", "tuton_db")
 
 COURSES = [
     {
