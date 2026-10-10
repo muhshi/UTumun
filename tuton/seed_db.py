@@ -165,7 +165,7 @@ def seed_from_markdown_reports(
                     raw_score = st.get("score")
                     score = int(raw_score) if raw_score is not None and str(raw_score).isdigit() else None
                     feedback = st.get("feedback")
-                    status = "completed" if score is not None else "pending"
+                    status = "completed"
 
                     db.upsert_student(nim=nim, name=name, course_id=cid)
                     db.upsert_submission(
@@ -197,7 +197,7 @@ def seed_from_markdown_reports(
                 raw_score = st.get("score")
                 score = int(raw_score) if raw_score is not None and str(raw_score).isdigit() else None
                 feedback = st.get("feedback")
-                status = "completed" if score is not None else "pending"
+                status = "completed"
 
                 db.upsert_student(nim=nim, name=name, course_id="413073")
                 db.upsert_submission(

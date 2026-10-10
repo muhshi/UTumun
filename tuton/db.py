@@ -415,9 +415,10 @@ class Database:
             is_grade_copied = current_sub.get("is_grade_copied", 0) if current_sub else 0
             feedback = current_sub.get("feedback") if current_sub else None
 
+            sub_status = current_sub.get("status", "pending") if current_sub else "pending"
             if is_copied == 1:
                 item_status = "copied"
-            elif current_score is not None and feedback:
+            elif sub_status in ["completed", "graded", "evaluated"]:
                 item_status = "completed"
             else:
                 item_status = "pending"
@@ -471,8 +472,12 @@ class Database:
 
             for s_num in range(1, 9):
                 cs_subs = subs_by_cs.get((cid, s_num), [])
-                # Selesai = memiliki nilai (score tidak None)
-                completed_subs = [s for s in cs_subs if s.get("score") is not None]
+                # Selesai = status completed/graded/evaluated/copied atau sudah disalin feedback
+                completed_subs = [
+                    s for s in cs_subs
+                    if (s.get("status") in ["completed", "graded", "evaluated", "copied"] or s.get("is_copied") == 1)
+                    and s.get("status") != "pending"
+                ]
                 completed_count = len(completed_subs)
                 total_in_session = len(cs_subs)
                 pending_count = max(0, total_in_session - completed_count)
