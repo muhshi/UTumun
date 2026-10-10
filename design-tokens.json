@@ -1,0 +1,67 @@
+{
+  "name": "UT-Tuton-Design-System-Warm-Gold",
+  "version": "1.1.0",
+  "theme": "Warm Sunlight & Honey Gold (Pilihan Favorit Ibu Ainur)",
+  "colors": {
+    "brand": {
+      "primary": "#D97706",
+      "primary-hover": "#B45309",
+      "primary-dark": "#78350F",
+      "gold": "#F59E0B",
+      "gold-light": "#FDE68A",
+      "gold-warm": "#FBBF24",
+      "cream": "#FEF3C7",
+      "sunshine": "#FFFBEB"
+    },
+    "neutral": {
+      "bg": "#FFFDF5",
+      "card": "#FFFFFF",
+      "border": "#FDE68A",
+      "border-subtle": "#FEF9C3",
+      "text-primary": "#451A03",
+      "text-secondary": "#78350F",
+      "text-muted": "#A16207"
+    },
+    "accents": {
+      "navy-subtle": "#1E3A8A",
+      "ut-blue": "#0284C7"
+    },
+    "status": {
+      "success": "#059669",
+      "success-bg": "#ECFDF5",
+      "success-border": "#A7F3D0",
+      "warning": "#D97706",
+      "warning-bg": "#FFFBEB",
+      "warning-border": "#FDE68A",
+      "danger": "#DC2626",
+      "danger-bg": "#FEF2F2",
+      "danger-border": "#FECACA",
+      "tugas": "#D97706",
+      "diskusi": "#CA8A04"
+    }
+  },
+  "typography": {
+    "fontFamily": "Plus Jakarta Sans, Inter, system-ui, -apple-system, sans-serif",
+    "sizes": {
+      "xs": "0.75rem",
+      "sm": "0.875rem",
+      "base": "1rem",
+      "lg": "1.125rem",
+      "xl": "1.25rem",
+      "2xl": "1.5rem",
+      "3xl": "1.875rem"
+    }
+  },
+  "radii": {
+    "sm": "0.375rem",
+    "md": "0.5rem",
+    "lg": "0.75rem",
+    "xl": "1rem",
+    "full": "9999px"
+  },
+  "shadows": {
+    "card": "0 1px 3px 0 rgb(217 119 6 / 0.08), 0 1px 2px -1px rgb(217 119 6 / 0.08)",
+    "card-hover": "0 4px 12px -2px rgb(217 119 6 / 0.15), 0 2px 6px -2px rgb(217 119 6 / 0.1)",
+    "gold-glow": "0 0 15px 0 rgb(245 158 11 / 0.3)"
+  }
+}

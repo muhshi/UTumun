@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pratinjau Desain: Asisten Tutor UT MKWN4108 (Tema Warm Honey & Gold)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Plus Jakarta Sans', 'sans-serif'],
+          },
+          colors: {
+            honey: {
+              50: '#FFFDF5',
+              100: '#FEF9C3',
+              200: '#FDE68A',
+              300: '#FCD34D',
+              400: '#FBBF24',
+              500: '#F59E0B',
+              600: '#D97706',
+              700: '#B45309',
+              800: '#78350F',
+              900: '#451A03',
+            }
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-honey-50 text-honey-900 font-sans antialiased p-6 md:p-10">
+  <div class="max-w-6xl mx-auto space-y-10">
+    <!-- Header -->
+    <header class="bg-white border-2 border-honey-200 rounded-2xl p-6 shadow-sm">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div class="flex items-center space-x-4">
+          <div class="w-14 h-14 bg-gradient-to-br from-honey-400 to-honey-600 rounded-2xl flex items-center justify-center text-white font-extrabold text-2xl shadow-md border-2 border-honey-200">
+            ☀️
+          </div>
+          <div>
+            <div class="flex items-center space-x-2">
+              <h1 class="text-2xl font-extrabold text-honey-900">Asisten Tutor UT MKWN4108</h1>
+              <span class="px-2.5 py-0.5 bg-honey-100 text-honey-800 text-xs font-bold rounded-full border border-honey-300">Tema Emas Hangat 💛</span>
+            </div>
+            <p class="text-honey-700 text-sm font-medium mt-0.5">Bahasa Indonesia • Ibu Ainur Rosyidah Azmie Putry, S.Pd., M.Pd.</p>
+          </div>
+        </div>
+        <div class="flex items-center space-x-3">
+          <button class="px-4 py-2 bg-honey-100 hover:bg-honey-200 text-honey-800 rounded-xl text-sm font-bold border border-honey-300 transition flex items-center space-x-2">
+            <span>📥</span>
+            <span>Ekspor Nilai</span>
+          </button>
+          <button class="px-4 py-2 bg-honey-500 hover:bg-honey-600 text-white rounded-xl text-sm font-bold shadow-md shadow-honey-500/20 transition flex items-center space-x-2">
+            <span>🔄</span>
+            <span>Sinkronkan Data UT</span>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Metrics Cards in Honey Yellow Palette -->
+    <section class="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div class="bg-white p-5 rounded-2xl border-2 border-honey-200 shadow-sm">
+        <div class="text-xs font-bold text-honey-700 uppercase tracking-wider">Total Mahasiswa</div>
+        <div class="text-3xl font-extrabold text-honey-900 mt-2">179</div>
+        <div class="text-xs text-honey-600 mt-1">4 Kelas Terdaftar</div>
+      </div>
+      <div class="bg-white p-5 rounded-2xl border-2 border-emerald-200 shadow-sm">
+        <div class="text-xs font-bold text-emerald-700 uppercase tracking-wider">Selesai Dinilai</div>
+        <div class="text-3xl font-extrabold text-emerald-600 mt-2">142</div>
+        <div class="text-xs text-emerald-600 mt-1">79.3% Tuntas</div>
+      </div>
+      <div class="bg-white p-5 rounded-2xl border-2 border-honey-300 bg-honey-50/50 shadow-sm">
+        <div class="text-xs font-bold text-honey-800 uppercase tracking-wider">Perlu Tindakan</div>
+        <div class="text-3xl font-extrabold text-honey-600 mt-2">37</div>
+        <div class="text-xs text-honey-700 mt-1">Butuh Nilai/Feedback</div>
+      </div>
+      <div class="bg-white p-5 rounded-2xl border-2 border-honey-200 shadow-sm">
+        <div class="text-xs font-bold text-honey-700 uppercase tracking-wider">Sesi Berjalan</div>
+        <div class="text-3xl font-extrabold text-honey-900 mt-2">Sesi 4</div>
+        <div class="text-xs text-honey-600 mt-1">💬 Diskusi Kalimat Efektif</div>
+      </div>
+    </section>
+
+    <!-- Progress Matrix Preview with Honey Yellow accents -->
+    <section class="bg-white border-2 border-honey-200 rounded-2xl p-6 shadow-sm space-y-4">
+      <div class="flex items-center justify-between">
+        <div>
+          <h2 class="text-lg font-bold text-honey-900">Matriks Kelengkapan Kelas x Sesi (1 - 8)</h2>
+          <p class="text-xs text-honey-700">Pilih kotak sesi untuk memfilter daftar mahasiswa di bawah secara instan.</p>
+        </div>
+        <div class="flex items-center space-x-3 text-xs">
+          <span class="flex items-center space-x-1 font-semibold text-honey-800"><span class="w-3 h-3 rounded bg-honey-200 border border-honey-400 inline-block"></span> <span>💬 Diskusi (1,2,4,6,8)</span></span>
+          <span class="flex items-center space-x-1 font-semibold text-honey-800"><span class="w-3 h-3 rounded bg-honey-400 border border-honey-600 inline-block"></span> <span>📝 Tugas (3,5,7)</span></span>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-8 gap-2 text-center text-xs">
+        <div class="p-3 rounded-xl bg-honey-100 border-2 border-honey-300 font-bold text-honey-900 hover:border-honey-500 cursor-pointer transition">
+          <div class="text-[10px] text-honey-600 font-semibold">S1 (Diskusi)</div>
+          <div class="text-sm font-extrabold text-emerald-600 mt-1">96%</div>
+          <div class="text-[10px] text-honey-700">6 pending</div>
+        </div>
+        <div class="p-3 rounded-xl bg-honey-100 border-2 border-honey-300 font-bold text-honey-900 hover:border-honey-500 cursor-pointer transition">
+          <div class="text-[10px] text-honey-600 font-semibold">S2 (Diskusi)</div>
+          <div class="text-sm font-extrabold text-emerald-600 mt-1">77%</div>
+          <div class="text-[10px] text-honey-700">37 pending</div>
+        </div>
+        <div class="p-3 rounded-xl bg-amber-100 border-2 border-honey-400 font-bold text-honey-900 hover:border-honey-500 cursor-pointer transition ring-2 ring-honey-400/30">
+          <div class="text-[10px] text-honey-700 font-semibold">S3 (📝 Tugas 1)</div>
+          <div class="text-sm font-extrabold text-honey-700 mt-1">82%</div>
+          <div class="text-[10px] text-honey-700">8 pending</div>
+        </div>
+        <div class="p-3 rounded-xl bg-honey-200 border-2 border-honey-500 font-bold text-honey-900 hover:border-honey-600 cursor-pointer transition shadow-sm">
+          <div class="text-[10px] text-honey-800 font-semibold">S4 (Diskusi)</div>
+          <div class="text-sm font-extrabold text-honey-800 mt-1">68%</div>
+          <div class="text-[10px] text-honey-800">27 pending</div>
+        </div>
+        <div class="p-3 rounded-xl bg-honey-50 border border-honey-200 text-honey-400 cursor-not-allowed">
+          <div class="text-[10px]">S5 (📝 Tugas 2)</div>
+          <div class="text-xs mt-1">Mendatang</div>
+        </div>
+        <div class="p-3 rounded-xl bg-honey-50 border border-honey-200 text-honey-400 cursor-not-allowed">
+          <div class="text-[10px]">S6 (Diskusi)</div>
+          <div class="text-xs mt-1">Mendatang</div>
+        </div>
+        <div class="p-3 rounded-xl bg-honey-50 border border-honey-200 text-honey-400 cursor-not-allowed">
+          <div class="text-[10px]">S7 (📝 Tugas 3)</div>
+          <div class="text-xs mt-1">Mendatang</div>
+        </div>
+        <div class="p-3 rounded-xl bg-honey-50 border border-honey-200 text-honey-400 cursor-not-allowed">
+          <div class="text-[10px]">S8 (Diskusi)</div>
+          <div class="text-xs mt-1">Mendatang</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Student Card with Honey Gold Trajectory and 1-Click Copy -->
+    <section class="space-y-4">
+      <h2 class="text-lg font-bold text-honey-900">Contoh Kartu Mahasiswa (Nuansa Emas Madu Hangat)</h2>
+      <div class="bg-white border-2 border-honey-200 rounded-2xl p-6 shadow-sm space-y-5">
+        <!-- Student Header -->
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-honey-100 pb-4">
+          <div>
+            <div class="flex items-center space-x-3">
+              <h3 class="text-lg font-extrabold text-honey-900">ALIYAH ALIFIYAH SIREGAR</h3>
+              <span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-honey-100 text-honey-800 border border-honey-300">NIM: 059467477</span>
+            </div>
+            <p class="text-xs text-honey-700 font-medium mt-1">MKWN4108.2137 • Bahasa Indonesia 2137 • Sesi 4 (Diskusi)</p>
+          </div>
+          <div>
+            <span class="px-3 py-1 rounded-full text-xs font-extrabold bg-amber-50 text-amber-800 border border-amber-300">
+              ⚠️ Perlu Dinilai & Feedback
+            </span>
+          </div>
+        </div>
+
+        <!-- Grade Trajectory Strip in Honey Yellow -->
+        <div class="bg-honey-50/70 p-3.5 rounded-xl border border-honey-200 flex flex-wrap items-center justify-between gap-3">
+          <div class="flex items-center space-x-2 text-xs">
+            <span class="text-honey-700 font-bold">Trajektori Nilai:</span>
+            <span class="px-2.5 py-1 bg-white border border-honey-200 rounded-lg text-honey-800 font-bold">S1: 85</span>
+            <span class="text-honey-400 font-bold">➔</span>
+            <span class="px-2.5 py-1 bg-white border border-honey-200 rounded-lg text-honey-800 font-bold">S2: 88</span>
+            <span class="text-honey-400 font-bold">➔</span>
+            <span class="px-2.5 py-1 bg-white border border-honey-200 rounded-lg text-honey-800 font-bold">S3: 91</span>
+            <span class="text-honey-400 font-bold">➔</span>
+            <span class="px-2.5 py-1 bg-honey-500 text-white rounded-lg font-extrabold shadow-sm">S4: 93 (Saran)</span>
+          </div>
+          <div class="flex items-center space-x-2">
+            <span class="text-xs font-semibold text-honey-800">Nilai: <strong class="text-sm font-black text-honey-900">93</strong></span>
+            <button class="px-3 py-1.5 bg-honey-100 hover:bg-honey-200 text-honey-900 rounded-lg text-xs font-bold border border-honey-300 transition">
+              Salin Nilai (93)
+            </button>
+          </div>
+        </div>
+
+        <!-- Feedback Box -->
+        <div class="space-y-2">
+          <div class="flex items-center justify-between">
+            <label class="text-xs font-bold text-honey-900 flex items-center space-x-1.5">
+              <span>📝</span>
+              <span>Draf Feedback 2 Paragraf (Sesuai BMP MKWN4108):</span>
+            </label>
+            <button class="px-4 py-2 bg-honey-500 hover:bg-honey-600 text-white rounded-xl text-xs font-extrabold shadow-md shadow-honey-500/20 transition flex items-center space-x-1.5 active:scale-95">
+              <span>📋</span>
+              <span>Salin Feedback</span>
+            </button>
+          </div>
+          <div class="p-4 bg-honey-50/40 border border-honey-200 rounded-xl text-sm text-honey-900 leading-relaxed font-sans space-y-3">
+            <p>Halo Aliyah Alifiyah Siregar, terima kasih atas partisipasi aktif Saudara dalam Forum Diskusi 4 ini. Analisis yang Saudara paparkan sudah sangat baik dan tajam, khususnya dalam mengidentifikasi ketidakefektifan kalimat [1] dan [2] pada teks pohon Tabebuya di Bojonegoro. Saudara tepat menjelaskan bahwa perulangan bentuk jamak (pleonasme) pada frasa tersebut melanggar prinsip kehematan kata, serta mampu memberikan formulasi perbaikan kalimat yang jauh lebih efektif, lugas, dan sesuai kaidah tata bahasa baku.</p>
+            <p>Sebagai catatan penyempurnaan ke depan, Saudara dapat lebih memperkuat analisis dengan memperjelas prinsip kehematan kata di samping prinsip kelogisan dan kesepadanan struktur serta menyertakan rujukan BMP MKWN4108 Modul 4/5 UT sebagai dasar teori penyuntingan kalimat. Pertahankan kecermatan berbahasa dan cara berpikir analitis ini pada sesi-sesi diskusi mendatang!</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+</body>
+</html>

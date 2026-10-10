@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  tuton-dashboard:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: tuton_dashboard
+    restart: unless-stopped
+    ports:
+      - "8020:8020"
+    env_file:
+      - .env
+    volumes:
+      - ./data:/app/data
+      - ./.auth:/app/.auth
+    environment:
+      - PORT=8020
+      - CHROME_PATH=/root/.cache/ms-playwright/chromium-1155/chrome-linux/chrome
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8020/api/recap || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s

@@ -3,34 +3,28 @@
 venv/
 env/
 
-# Node & Dependencies
-node_modules/
-
-# Secrets & Sessions
+# Secrets, Credentials, & Browser Sessions
 .env
 .auth/
+*.session
+session.json
 
-# Data & Output
-data/
+# Local Databases & Output Data
+data/*.db
+data/*.sqlite
+data/*.sqlite3
+data/*.html
+data/*.txt
+*.log
+.deploy_cache_hash
+
+# Design & Config JSON exceptions
 *.json
 !package.json
+!design-tokens.json
 
-# Cache & Bytecode
-__pycache__/
-*.py[cod]
-*$py.class
-.pytest_cache/
-
-# Screenshots & Images
-*.png
-*.jpg
-*.jpeg
-
-# OS Files
-.DS_Store
-Thumbs.db
-
-# Scratch & Temporary scripts
+# Legacy scratch scripts
+scripts/legacy_scratch/
 scratch_*.py
 dump_*.py
 check_*.py
@@ -38,5 +32,18 @@ inspect_*.py
 parse_*.py
 get_*.py
 /test_*.py
-!tests/
-tests/__pycache__/
+
+# Cache & Bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+
+# Screenshots & Media
+*.png
+*.jpg
+*.jpeg
+
+# OS Files
+.DS_Store
+Thumbs.db

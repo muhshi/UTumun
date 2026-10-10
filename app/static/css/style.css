@@ -1,0 +1,158 @@
+/* ==========================================================================
+   Tema Warm Honey & Sunlight Gold (Edisi Spesial Bu Ainur Rosyidah)
+   Asisten Tutor UT MKWN4108 - Bahasa Indonesia
+   ========================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+
+:root {
+  --color-primary: #D97706;
+  --color-primary-hover: #B45309;
+  --color-primary-dark: #78350F;
+  --color-gold: #F59E0B;
+  --color-gold-light: #FDE68A;
+  --color-gold-warm: #FBBF24;
+  --color-cream: #FEF3C7;
+  --color-sunshine: #FFFBEB;
+  --color-bg: #FFFDF5;
+  --color-card: #FFFFFF;
+  --color-border: #FDE68A;
+  --color-border-subtle: #FEF9C3;
+  --color-text-primary: #451A03;
+  --color-text-secondary: #78350F;
+  --color-text-muted: #A16207;
+  --color-success: #059669;
+  --color-warning: #D97706;
+  --color-danger: #DC2626;
+  --color-tugas: #D97706;
+  --color-diskusi: #CA8A04;
+  --shadow-card: 0 1px 3px 0 rgb(217 119 6 / 0.08), 0 1px 2px -1px rgb(217 119 6 / 0.08);
+  --shadow-card-hover: 0 4px 12px -2px rgb(217 119 6 / 0.15), 0 2px 6px -2px rgb(217 119 6 / 0.1);
+  --shadow-gold-glow: 0 0 15px 0 rgb(245 158 11 / 0.3);
+}
+
+body {
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background-color: var(--color-bg);
+  color: var(--color-text-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Custom Scrollbar in Warm Amber */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #FFFBEB;
+}
+::-webkit-scrollbar-thumb {
+  background: #FDE68A;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #F59E0B;
+}
+
+/* Card Hover Animations */
+.card-hover-effect {
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.card-hover-effect:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-card-hover);
+  border-color: #FBBF24;
+}
+
+/* Golden Glow Effects */
+.gold-glow {
+  box-shadow: 0 0 20px -3px rgba(245, 158, 11, 0.35);
+}
+
+.gold-glow-subtle {
+  box-shadow: 0 0 10px 0 rgba(251, 191, 36, 0.2);
+}
+
+/* Progress bar shimmer effect */
+@keyframes shimmer-move {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.progress-animated-stripes {
+  background-image: linear-gradient(
+    45deg,
+    rgba(255, 255, 255, 0.2) 25%,
+    transparent 25%,
+    transparent 50%,
+    rgba(255, 255, 255, 0.2) 50%,
+    rgba(255, 255, 255, 0.2) 75%,
+    transparent 75%,
+    transparent
+  );
+  background-size: 1rem 1rem;
+  animation: progress-stripes 1s linear infinite;
+}
+
+@keyframes progress-stripes {
+  from {
+    background-position: 1rem 0;
+  }
+  to {
+    background-position: 0 0;
+  }
+}
+
+/* Micro-interaction: Pulse on copy */
+@keyframes copySuccessPulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.animate-copy-success {
+  animation: copySuccessPulse 0.3s ease-in-out;
+}
+
+/* Student Feedback essay container typography */
+.feedback-prose {
+  font-size: 0.925rem;
+  line-height: 1.7;
+  color: var(--color-text-primary);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.feedback-prose p {
+  margin-bottom: 0.75rem;
+}
+
+.feedback-prose p:last-child {
+  margin-bottom: 0;
+}
+
+/* Trajectory Arrow Connector */
+.trajectory-arrow {
+  color: #D97706;
+  font-weight: 700;
+  user-select: none;
+}
+
+/* Focus styles for keyboard accessibility */
+button:focus-visible,
+select:focus-visible,
+input:focus-visible {
+  outline: 2px solid #D97706;
+  outline-offset: 2px;
+}

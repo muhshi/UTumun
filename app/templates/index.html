@@ -1,0 +1,952 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ title | default("Dashboard Asisten Tutor UT MKWN4108") }}</title>
+  
+  <!-- Google Fonts: Plus Jakarta Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              primary: '#D97706',       // Amber Gold Prime
+              hover: '#B45309',
+              dark: '#78350F',
+              gold: '#F59E0B',          // Warm Honey
+              light: '#FDE68A',         // Honey Border
+              warm: '#FBBF24',          // Canary Sunshine
+              cream: '#FEF3C7',
+              sunshine: '#FFFBEB'
+            },
+            neutral: {
+              ivory: '#FFFDF5',         // Soft Ivory Cream
+              card: '#FFFFFF',
+              border: '#FDE68A',
+              subtle: '#FEF9C3',
+              bronze: '#451A03',        // Deep Espresso Bronze
+              slate: '#78350F',         // Rich Amber Slate
+              muted: '#A16207'
+            },
+            status: {
+              success: '#059669',
+              warning: '#D97706',
+              alert: '#B45309',
+              danger: '#DC2626',
+              tugas: '#D97706',
+              diskusi: '#CA8A04'
+            }
+          },
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'Inter', 'system-ui', 'sans-serif'],
+          },
+          boxShadow: {
+            card: '0 1px 3px 0 rgb(217 119 6 / 0.08), 0 1px 2px -1px rgb(217 119 6 / 0.08)',
+            'card-hover': '0 4px 12px -2px rgb(217 119 6 / 0.15), 0 2px 6px -2px rgb(217 119 6 / 0.1)',
+            'gold-glow': '0 0 15px 0 rgb(245 158 11 / 0.3)',
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- Custom Theme Stylesheet -->
+  <link rel="stylesheet" href="/static/css/style.css">
+
+  <!-- Alpine.js Application Controller -->
+  <script src="/static/js/app.js"></script>
+  <!-- Alpine.js Core CDN -->
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+</head>
+
+<body class="bg-[#FFFDF5] text-[#451A03] min-h-screen antialiased flex flex-col" x-data="tutonDashboard">
+
+  <!-- ========================================== -->
+  <!-- 1. HEADER & BRAND BAR                      -->
+  <!-- ========================================== -->
+  <header class="bg-white border-b border-[#FDE68A] sticky top-0 z-30 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5">
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        
+        <!-- Brand & Title -->
+        <div class="flex items-center space-x-3.5">
+          <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#FBBF24] via-[#F59E0B] to-[#D97706] flex items-center justify-center text-white shadow-md shadow-amber-500/20 flex-shrink-0 text-2xl">
+            ☀️
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="text-xs font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-[#FEF3C7] text-[#92400E] border border-[#FDE68A]">
+                UT Tuton Assistant
+              </span>
+              <span class="text-xs font-medium text-[#78350F]">MKWN4108</span>
+            </div>
+            <h1 class="text-xl sm:text-2xl font-bold text-[#451A03] tracking-tight leading-snug">
+              Dashboard Asisten Tutor UT — Bahasa Indonesia
+            </h1>
+          </div>
+        </div>
+
+        <!-- Profile Badge & Action Buttons -->
+        <div class="flex flex-wrap items-center gap-3">
+          
+          <!-- Profile Badge -->
+          <div class="flex items-center gap-2.5 bg-[#FFFBEB] border border-[#FDE68A] rounded-xl px-3.5 py-1.5 shadow-sm">
+            <div class="w-8 h-8 rounded-full bg-[#D97706] text-white flex items-center justify-center font-bold text-xs">
+              AR
+            </div>
+            <div class="text-left">
+              <p class="text-xs font-bold text-[#451A03] leading-none">
+                Ibu Ainur Rosyidah Azmie Putry, S.Pd., M.Pd.
+              </p>
+              <p class="text-[11px] font-semibold text-[#92400E] mt-0.5">
+                NIP Tutor: <span class="font-mono">01007726</span>
+              </p>
+            </div>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="flex items-center gap-2">
+            <button 
+              @click="exportCsv()"
+              class="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-xl bg-white text-[#78350F] border border-[#FDE68A] hover:bg-[#FEF3C7] transition-all shadow-sm active:scale-95"
+              title="Unduh seluruh rekapitulasi penilaian kelas dalam format CSV"
+            >
+              <i data-lucide="download" class="w-4 h-4 text-[#D97706]"></i>
+              <span>📥 Ekspor CSV</span>
+            </button>
+
+            <button 
+              @click="openScanModal()"
+              class="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold rounded-xl bg-gradient-to-r from-[#D97706] to-[#F59E0B] text-white hover:from-[#B45309] hover:to-[#D97706] transition-all shadow-sm active:scale-95"
+              title="Mulai sinkronisasi pemindaian tanggapan dari e-learning UT"
+            >
+              <i data-lucide="refresh-cw" class="w-4 h-4 text-white" :class="{'animate-spin': scanStatus.is_running}"></i>
+              <span>🔄 Sinkronkan Data UT</span>
+            </button>
+          </div>
+
+        </div>
+
+      </div>
+    </div>
+  </header>
+
+  <!-- ========================================== -->
+  <!-- MAIN CONTAINER                             -->
+  <!-- ========================================== -->
+  <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+
+    <!-- ========================================== -->
+    <!-- 2. 4 METRICS CARDS                         -->
+    <!-- ========================================== -->
+    <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      
+      <!-- Card 1: Total Mahasiswa -->
+      <div class="bg-white rounded-2xl border border-[#FDE68A] p-5 shadow-sm card-hover-effect relative overflow-hidden">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-xs font-bold uppercase tracking-wider text-[#78350F]">Total Mahasiswa</p>
+            <h3 class="text-2xl sm:text-3xl font-extrabold text-[#451A03] mt-1" x-text="recap.total_students || 0">
+              0
+            </h3>
+          </div>
+          <div class="w-12 h-12 rounded-xl bg-[#FEF3C7] text-[#D97706] flex items-center justify-center">
+            <i data-lucide="users" class="w-6 h-6"></i>
+          </div>
+        </div>
+        <div class="mt-3 flex items-center gap-1.5 text-xs text-[#92400E]">
+          <span class="inline-block w-2 h-2 rounded-full bg-[#D97706]"></span>
+          <span>4 Kelas Aktif (2137, 2141, 2145, 465)</span>
+        </div>
+      </div>
+
+      <!-- Card 2: Selesai Dinilai -->
+      <div class="bg-white rounded-2xl border border-[#FDE68A] p-5 shadow-sm card-hover-effect relative overflow-hidden">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-xs font-bold uppercase tracking-wider text-[#78350F]">Selesai Dinilai</p>
+            <h3 class="text-2xl sm:text-3xl font-extrabold text-[#059669] mt-1" x-text="recap.completed_students || 0">
+              0
+            </h3>
+          </div>
+          <div class="w-12 h-12 rounded-xl bg-[#ECFDF5] text-[#059669] flex items-center justify-center">
+            <i data-lucide="check-circle-2" class="w-6 h-6"></i>
+          </div>
+        </div>
+        <div class="mt-3 flex items-center gap-2 text-xs">
+          <div class="w-full bg-[#F3F4F6] rounded-full h-1.5 overflow-hidden">
+            <div class="bg-[#059669] h-1.5 rounded-full transition-all duration-500" :style="`width: ${recap.completion_rate || 0}%`"></div>
+          </div>
+          <span class="font-bold text-[#059669] whitespace-nowrap" x-text="`${recap.completion_rate || 0}%`">0%</span>
+        </div>
+      </div>
+
+      <!-- Card 3: Perlu Tindakan (Pending) -->
+      <div class="bg-white rounded-2xl border border-[#FDE68A] p-5 shadow-sm card-hover-effect relative overflow-hidden">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-xs font-bold uppercase tracking-wider text-[#78350F]">Perlu Tindakan</p>
+            <h3 class="text-2xl sm:text-3xl font-extrabold text-[#D97706] mt-1" x-text="recap.pending_students || 0">
+              0
+            </h3>
+          </div>
+          <div class="w-12 h-12 rounded-xl bg-[#FFFBEB] text-[#D97706] flex items-center justify-center">
+            <i data-lucide="clock" class="w-6 h-6"></i>
+          </div>
+        </div>
+        <div class="mt-3 flex items-center gap-1.5 text-xs text-[#B45309]">
+          <span class="inline-block w-2 h-2 rounded-full bg-[#F59E0B] animate-pulse"></span>
+          <span>Menunggu evaluasi & salin feedback</span>
+        </div>
+      </div>
+
+      <!-- Card 4: Sesi Berjalan -->
+      <div class="bg-white rounded-2xl border border-[#FDE68A] p-5 shadow-sm card-hover-effect relative overflow-hidden">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-xs font-bold uppercase tracking-wider text-[#78350F]">Sesi Berjalan</p>
+            <h3 class="text-lg sm:text-xl font-bold text-[#451A03] mt-1 truncate" x-text="activeSessionInfo">
+              Sesi 1 & 2 Aktif
+            </h3>
+          </div>
+          <div class="w-12 h-12 rounded-xl bg-[#FEF3C7] text-[#D97706] flex items-center justify-center">
+            <i data-lucide="calendar" class="w-6 h-6"></i>
+          </div>
+        </div>
+        <div class="mt-3 flex items-center justify-between text-xs text-[#92400E]">
+          <span>Total 8 Sesi Tuton UT</span>
+          <span class="font-bold text-[#D97706]">Semester Genap</span>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ========================================== -->
+    <!-- 3. MATRIKS PROGRES 4 KELAS X 8 SESI        -->
+    <!-- ========================================== -->
+    <section class="bg-white rounded-2xl border border-[#FDE68A] p-5 shadow-sm">
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4 pb-3 border-b border-[#FEF3C7]">
+        <div>
+          <h2 class="text-lg font-bold text-[#451A03] flex items-center gap-2">
+            <i data-lucide="layout-grid" class="w-5 h-5 text-[#D97706]"></i>
+            Matriks Progres Penilaian (4 Kelas × 8 Sesi)
+          </h2>
+          <p class="text-xs text-[#78350F] mt-0.5">
+            Klik pada salah satu sel sesi untuk langsung menyaring daftar mahasiswa di bawah.
+          </p>
+        </div>
+        
+        <!-- Legend Indicator -->
+        <div class="flex flex-wrap items-center gap-2 text-xs">
+          <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-[#FEF3C7] text-[#CA8A04] font-semibold border border-[#FDE68A]">
+            💬 Diskusi (S1,2,4,6,8)
+          </span>
+          <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-[#FEF3C7] text-[#D97706] font-semibold border border-[#FDE68A]">
+            📝 Tugas (S3,5,7)
+          </span>
+          <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-[#ECFDF5] text-[#059669] font-semibold border border-[#A7F3D0]">
+            ✓ Tuntas (100%)
+          </span>
+        </div>
+      </div>
+
+      <!-- Matrix Table -->
+      <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse">
+          <thead>
+            <tr class="bg-[#FFFBEB] text-[#78350F] text-xs font-bold border-b border-[#FDE68A]">
+              <th class="py-3 px-3 min-w-[140px] rounded-l-xl">Kelas</th>
+              <template x-for="s in 8" :key="s">
+                <th class="py-3 px-2 text-center min-w-[96px]">
+                  <div class="flex flex-col items-center">
+                    <span class="font-bold text-[#451A03]" x-text="`Sesi ${s}`"></span>
+                    <span 
+                      class="text-[10px] px-1.5 py-0.2 rounded font-semibold mt-0.5"
+                      :class="isSessionTugas(s) ? 'bg-[#FEF3C7] text-[#D97706]' : 'bg-[#FEF9C3] text-[#CA8A04]'"
+                      x-text="isSessionTugas(s) ? '📝 Tugas' : '💬 Diskusi'"
+                    ></span>
+                  </div>
+                </th>
+              </template>
+              <th class="py-3 px-3 text-center min-w-[100px] rounded-r-xl">Progres</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-[#FEF9C3] text-xs">
+            <template x-for="course in courses" :key="course.id">
+              <tr class="hover:bg-[#FFFDF5] transition-colors">
+                
+                <!-- Nama Kelas -->
+                <td class="py-3 px-3 font-bold text-[#451A03] whitespace-nowrap">
+                  <div class="flex items-center gap-1.5">
+                    <span class="w-2 h-2 rounded-full bg-[#D97706]"></span>
+                    <span x-text="course.code"></span>
+                  </div>
+                  <div class="text-[11px] text-[#A16207] font-normal pl-3.5" x-text="course.name"></div>
+                </td>
+
+                <!-- Sel Sesi 1 s.d. 8 -->
+                <template x-for="s in 8" :key="s">
+                  <td class="py-2 px-1 text-center">
+                    <button
+                      @click="filterByCell(course.id, s)"
+                      class="w-full py-1.5 px-1 rounded-xl border text-center transition-all duration-150 group relative"
+                      :class="{
+                        'bg-[#ECFDF5] border-[#A7F3D0] text-[#059669] hover:bg-[#D1FAE5] shadow-xs': getMatrixCell(course.id, s).total > 0 && getMatrixCell(course.id, s).rate >= 100,
+                        'bg-[#FFFBEB] border-[#FDE68A] text-[#92400E] hover:bg-[#FEF3C7] hover:border-[#F59E0B] shadow-xs': getMatrixCell(course.id, s).total > 0 && getMatrixCell(course.id, s).rate < 100 && getMatrixCell(course.id, s).completed > 0,
+                        'bg-white border-[#FDE68A] text-[#B45309] hover:bg-[#FFFBEB]': getMatrixCell(course.id, s).total > 0 && getMatrixCell(course.id, s).completed === 0,
+                        'bg-gray-50 border-gray-200 text-gray-400': getMatrixCell(course.id, s).total === 0,
+                        'ring-2 ring-[#D97706] font-bold': selectedCourse == String(course.id) && selectedSession == s
+                      }"
+                      :title="`Klik untuk melihat rincian ${course.code} Sesi ${s} (${getMatrixCell(course.id, s).completed}/${getMatrixCell(course.id, s).total} dinilai)`"
+                    >
+                      <div class="text-[11px] font-bold">
+                        <span x-text="`${getMatrixCell(course.id, s).completed}/${getMatrixCell(course.id, s).total}`"></span>
+                      </div>
+                      
+                      <!-- Mini Progress Indicator -->
+                      <div class="text-[10px] mt-0.5">
+                        <template x-if="getMatrixCell(course.id, s).rate >= 100">
+                          <span class="text-[#059669] font-bold">✓ 100%</span>
+                        </template>
+                        <template x-if="getMatrixCell(course.id, s).rate < 100 && getMatrixCell(course.id, s).pending > 0">
+                          <span class="text-[#B45309]" x-text="`-${getMatrixCell(course.id, s).pending} pnd`"></span>
+                        </template>
+                        <template x-if="getMatrixCell(course.id, s).total === 0">
+                          <span class="text-gray-400">-</span>
+                        </template>
+                      </div>
+                    </button>
+                  </td>
+                </template>
+
+                <!-- Ringkasan Progres Kelas -->
+                <td class="py-3 px-3 text-center whitespace-nowrap">
+                  <span class="px-2.5 py-1 rounded-full text-[11px] font-bold bg-[#FEF3C7] text-[#78350F] border border-[#FDE68A]">
+                    Aktif
+                  </span>
+                </td>
+
+              </tr>
+            </template>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- 4. INTERACTIVE FILTER TOOLBAR              -->
+    <!-- ========================================== -->
+    <section class="bg-white rounded-2xl border border-[#FDE68A] p-4 shadow-sm space-y-3" id="student-list-section">
+      
+      <!-- Top Row Filters -->
+      <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
+        
+        <!-- Left: Dropdowns & Search -->
+        <div class="flex flex-wrap items-center gap-2.5 flex-grow">
+          
+          <!-- Dropdown Kelas -->
+          <div class="relative min-w-[170px]">
+            <label class="block text-[11px] font-bold text-[#78350F] uppercase tracking-wider mb-1">Pilih Kelas</label>
+            <select
+              x-model="selectedCourse"
+              @change="fetchStudents()"
+              class="w-full bg-[#FFFDF5] border border-[#FDE68A] rounded-xl px-3 py-2 text-xs font-semibold text-[#451A03] focus:ring-2 focus:ring-[#D97706] focus:border-[#D97706] transition-all cursor-pointer shadow-xs"
+            >
+              <option value="">Semua Kelas (4 Kelas)</option>
+              <template x-for="course in courses" :key="course.id">
+                <option :value="String(course.id)" x-text="`${course.code} (${course.name})`"></option>
+              </template>
+            </select>
+          </div>
+
+          <!-- Dropdown Sesi -->
+          <div class="relative min-w-[140px]">
+            <label class="block text-[11px] font-bold text-[#78350F] uppercase tracking-wider mb-1">Pilih Sesi</label>
+            <select
+              x-model="selectedSession"
+              @change="fetchStudents()"
+              class="w-full bg-[#FFFDF5] border border-[#FDE68A] rounded-xl px-3 py-2 text-xs font-semibold text-[#451A03] focus:ring-2 focus:ring-[#D97706] focus:border-[#D97706] transition-all cursor-pointer shadow-xs"
+            >
+              <option :value="null">Semua Sesi</option>
+              <template x-for="s in 8" :key="s">
+                <option :value="s" x-text="`Sesi ${s} ${isSessionTugas(s) ? '(Tugas)' : '(Diskusi)'}`"></option>
+              </template>
+            </select>
+          </div>
+
+          <!-- Real-time Search Box -->
+          <div class="relative flex-grow min-w-[220px]">
+            <label class="block text-[11px] font-bold text-[#78350F] uppercase tracking-wider mb-1">Cari Mahasiswa</label>
+            <div class="relative">
+              <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-[#A16207]">
+                <i data-lucide="search" class="w-4 h-4"></i>
+              </span>
+              <input
+                type="text"
+                x-model="searchQuery"
+                placeholder="Cari berdasarkan nama atau NIM..."
+                class="w-full bg-[#FFFDF5] border border-[#FDE68A] rounded-xl pl-9 pr-3 py-2 text-xs font-medium text-[#451A03] placeholder-[#A16207]/60 focus:ring-2 focus:ring-[#D97706] focus:border-[#D97706] transition-all shadow-xs"
+              >
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Right: Action Buttons -->
+        <div class="flex items-end gap-2 self-end lg:self-auto pt-4 lg:pt-0">
+          
+          <!-- Tombol Pindai Sesi Ini -->
+          <button
+            @click="openScanModal(selectedSession, selectedCourse)"
+            class="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold rounded-xl bg-[#FEF3C7] text-[#92400E] border border-[#FDE68A] hover:bg-[#FDE68A] transition-all shadow-xs active:scale-95"
+            title="Pindai dan evaluasi sesi terpilih"
+          >
+            <i data-lucide="zap" class="w-4 h-4 text-[#D97706]"></i>
+            <span>⚡ Pindai Sesi Ini</span>
+          </button>
+
+          <!-- Reset Filter -->
+          <button
+            x-show="selectedCourse || selectedSession !== null || searchQuery || statusFilter !== 'all'"
+            @click="resetFilters()"
+            class="inline-flex items-center gap-1 px-3 py-2 text-xs font-semibold rounded-xl bg-gray-100 text-gray-700 hover:bg-gray-200 transition-all shadow-xs"
+            title="Hapus semua filter"
+          >
+            <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
+            <span>Reset</span>
+          </button>
+
+        </div>
+
+      </div>
+
+      <!-- Bottom Row: Status Filter Pills -->
+      <div class="flex flex-wrap items-center gap-2 pt-2 border-t border-[#FEF9C3]">
+        <span class="text-xs font-bold text-[#78350F] mr-1">Status:</span>
+
+        <!-- Pill: Semua -->
+        <button
+          @click="statusFilter = 'all'"
+          class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold transition-all"
+          :class="statusFilter === 'all' ? 'bg-[#D97706] text-white shadow-xs' : 'bg-[#FFFBEB] text-[#78350F] border border-[#FDE68A] hover:bg-[#FEF3C7]'"
+        >
+          <span>Semua</span>
+          <span class="text-[10px] px-1.5 py-0.2 rounded-full" :class="statusFilter === 'all' ? 'bg-white/20 text-white' : 'bg-[#FEF3C7] text-[#78350F]'" x-text="countAll"></span>
+        </button>
+
+        <!-- Pill: Perlu Tindakan -->
+        <button
+          @click="statusFilter = 'pending'"
+          class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold transition-all"
+          :class="statusFilter === 'pending' ? 'bg-[#D97706] text-white shadow-xs' : 'bg-[#FFFBEB] text-[#B45309] border border-[#FDE68A] hover:bg-[#FEF3C7]'"
+        >
+          <span>Perlu Tindakan (Pending)</span>
+          <span class="text-[10px] px-1.5 py-0.2 rounded-full" :class="statusFilter === 'pending' ? 'bg-white/20 text-white' : 'bg-[#FEF3C7] text-[#B45309]'" x-text="countPending"></span>
+        </button>
+
+        <!-- Pill: Selesai Dinilai -->
+        <button
+          @click="statusFilter = 'evaluated'"
+          class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold transition-all"
+          :class="statusFilter === 'evaluated' ? 'bg-[#059669] text-white shadow-xs' : 'bg-[#ECFDF5] text-[#059669] border border-[#A7F3D0] hover:bg-[#D1FAE5]'"
+        >
+          <span>Selesai Dinilai</span>
+          <span class="text-[10px] px-1.5 py-0.2 rounded-full" :class="statusFilter === 'evaluated' ? 'bg-white/20 text-white' : 'bg-[#D1FAE5] text-[#059669]'" x-text="countEvaluated"></span>
+        </button>
+
+        <!-- Count Indicator -->
+        <span class="ml-auto text-xs font-medium text-[#78350F]">
+          Menampilkan <span class="font-bold text-[#451A03]" x-text="filteredStudents.length"></span> dari <span class="font-bold" x-text="students.length"></span> mahasiswa
+        </span>
+      </div>
+
+    </section>
+
+    <!-- ========================================== -->
+    <!-- 5. STUDENT CARDS VIEW                      -->
+    <!-- ========================================== -->
+    <section class="space-y-4">
+      
+      <!-- Loading State -->
+      <div x-show="studentsLoading" class="bg-white rounded-2xl border border-[#FDE68A] p-12 text-center shadow-sm">
+        <div class="inline-block animate-spin text-[#D97706] mb-3">
+          <i data-lucide="loader-2" class="w-8 h-8"></i>
+        </div>
+        <p class="text-sm font-semibold text-[#78350F]">Memuat data evaluasi mahasiswa...</p>
+      </div>
+
+      <!-- Empty State -->
+      <div 
+        x-show="!studentsLoading && filteredStudents.length === 0" 
+        class="bg-white rounded-2xl border border-[#FDE68A] p-12 text-center shadow-sm"
+      >
+        <div class="w-16 h-16 rounded-2xl bg-[#FFFBEB] text-[#D97706] flex items-center justify-center mx-auto mb-3">
+          <i data-lucide="user-x" class="w-8 h-8"></i>
+        </div>
+        <h3 class="text-base font-bold text-[#451A03]">Tidak ada mahasiswa yang cocok</h3>
+        <p class="text-xs text-[#78350F] mt-1 max-w-md mx-auto">
+          Tidak ditemukan mahasiswa untuk kriteria pencarian dan filter saat ini. Silakan ubah filter atau lakukan sinkronisasi data dari UT.
+        </p>
+        <button
+          @click="resetFilters()"
+          class="mt-4 inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold rounded-xl bg-[#FEF3C7] text-[#78350F] border border-[#FDE68A] hover:bg-[#FDE68A] transition-all"
+        >
+          Reset Filter
+        </button>
+      </div>
+
+      <!-- Student Cards List -->
+      <template x-for="(student, idx) in filteredStudents" :key="`${student.nim}_${student.course_id}_${student.current_session || 0}`">
+        <div 
+          class="bg-white rounded-2xl border border-[#FDE68A] shadow-sm hover:shadow-md transition-all duration-200 p-5 space-y-4 relative"
+          :class="{'border-l-4 border-l-[#D97706]': student.status === 'pending', 'border-l-4 border-l-[#059669]': student.status === 'evaluated'}"
+        >
+          
+          <!-- Card Header: Student Info & Status -->
+          <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 pb-3 border-b border-[#FEF9C3]">
+            <div>
+              <div class="flex flex-wrap items-center gap-2">
+                <!-- Nama Mahasiswa (Uppercase clean) -->
+                <h3 class="text-base font-bold text-[#451A03] tracking-wide" x-text="student.name"></h3>
+                
+                <!-- NIM Badge -->
+                <span class="px-2 py-0.5 rounded-md text-xs font-mono font-bold bg-[#FEF3C7] text-[#78350F] border border-[#FDE68A]">
+                  NIM: <span x-text="student.nim"></span>
+                </span>
+
+                <!-- Course Badge -->
+                <span class="px-2 py-0.5 rounded-md text-xs font-semibold bg-[#FFFBEB] text-[#92400E] border border-[#FDE68A]">
+                  <span x-text="getCourseCode(student.course_id)"></span>
+                </span>
+              </div>
+
+              <!-- Session Subtitle -->
+              <p class="text-xs text-[#78350F] mt-1 flex items-center gap-1.5">
+                <span class="font-semibold" x-text="student.current_session ? `Sesi ${student.current_session}` : 'Belum Ada Sesi'"></span>
+                <span class="text-[#D97706]">•</span>
+                <span x-text="isSessionTugas(student.current_session) ? 'Tugas Tertulis' : 'Partisipasi Diskusi'"></span>
+              </p>
+            </div>
+
+            <!-- Status & Action Badges -->
+            <div class="flex items-center gap-2">
+              <!-- Status Selesai / Pending -->
+              <span 
+                class="px-2.5 py-1 rounded-full text-xs font-bold inline-flex items-center gap-1 shadow-xs"
+                :class="student.status === 'evaluated' && student.current_score !== null ? 'bg-[#ECFDF5] text-[#059669] border border-[#A7F3D0]' : 'bg-[#FFFBEB] text-[#D97706] border border-[#FDE68A]'"
+              >
+                <i :data-lucide="student.status === 'evaluated' && student.current_score !== null ? 'check-circle' : 'clock'" class="w-3.5 h-3.5"></i>
+                <span x-text="student.status === 'evaluated' && student.current_score !== null ? 'Selesai Dinilai' : 'Perlu Tindakan'"></span>
+              </span>
+
+              <!-- Badge Sudah Disalin -->
+              <span 
+                x-show="student.is_copied === 1"
+                class="px-2 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200 inline-flex items-center gap-1"
+                title="Feedback teks telah disalin ke clipboard sebelumnya"
+              >
+                <i data-lucide="clipboard-check" class="w-3.5 h-3.5 text-blue-600"></i>
+                <span>Tersalin</span>
+              </span>
+
+              <!-- Tombol Edit Modal -->
+              <button
+                @click="openEditModal(student)"
+                class="p-1.5 rounded-lg text-[#78350F] hover:bg-[#FEF3C7] transition-all"
+                title="Ubah nilai atau sunting feedback"
+              >
+                <i data-lucide="edit-3" class="w-4 h-4"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- Grade Trajectory & Score Section -->
+          <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-center bg-[#FFFDF5] p-3.5 rounded-xl border border-[#FEF9C3]">
+            
+            <!-- Trajectory Visualization (col-span-8) -->
+            <div class="md:col-span-8 space-y-1.5">
+              <span class="text-[11px] font-bold uppercase tracking-wider text-[#78350F] block">
+                Riwayat Trajektori Nilai:
+              </span>
+              
+              <div class="flex flex-wrap items-center gap-1.5">
+                <template x-for="(traj, tIdx) in (student.trajectory || [])" :key="tIdx">
+                  <div class="flex items-center gap-1.5">
+                    
+                    <!-- Trajectory Pill -->
+                    <span 
+                      class="px-2 py-1 rounded-lg text-xs font-bold transition-all shadow-2xs"
+                      :class="{
+                        'bg-[#FEF3C7] text-[#78350F] border border-[#FDE68A]': traj.session_num !== student.current_session,
+                        'bg-gradient-to-r from-[#D97706] to-[#F59E0B] text-white shadow-sm ring-2 ring-[#FDE68A]': traj.session_num === student.current_session
+                      }"
+                    >
+                      <span x-text="`S${traj.session_num}: `"></span>
+                      <span class="font-extrabold" x-text="traj.score !== null ? traj.score : '-'"></span>
+                    </span>
+
+                    <!-- Trajectory Arrow Connector -->
+                    <span 
+                      x-show="tIdx < (student.trajectory || []).length - 1" 
+                      class="trajectory-arrow text-xs text-[#D97706]"
+                    >➔</span>
+
+                  </div>
+                </template>
+
+                <template x-if="!(student.trajectory && student.trajectory.length > 0)">
+                  <span class="text-xs text-[#A16207] italic">Belum ada riwayat sesi lampau</span>
+                </template>
+              </div>
+
+              <!-- Warning Indicator (Nilai Turun) -->
+              <div 
+                x-show="student.warning_lower_score" 
+                class="mt-2 inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-[#FFFBEB] border border-[#FDE68A] text-[#B45309] text-xs font-bold"
+              >
+                <span>⚠️ Peringatan: Nilai lebih rendah dari sesi sebelumnya</span>
+                <template x-if="student.previous_score && student.current_score">
+                  <span class="font-mono text-[11px] font-normal" x-text="`(${student.previous_score} ➔ ${student.current_score})`"></span>
+                </template>
+              </div>
+            </div>
+
+            <!-- Score Display & 1-Click Copy Grade (col-span-4) -->
+            <div class="md:col-span-4 flex items-center justify-between md:justify-end gap-3 border-t md:border-t-0 md:border-l border-[#FEF9C3] pt-3 md:pt-0 md:pl-4">
+              <div class="text-left md:text-right">
+                <span class="text-[11px] font-bold text-[#78350F] uppercase tracking-wider block">
+                  Nilai Evaluasi
+                </span>
+                <div class="flex items-baseline gap-1 mt-0.5">
+                  <span 
+                    class="text-2xl font-black"
+                    :class="student.current_score !== null ? 'text-[#D97706]' : 'text-[#A16207]'"
+                    x-text="student.current_score !== null ? student.current_score : (student.suggested_score || 85)"
+                  ></span>
+                  <span class="text-xs font-semibold text-[#78350F]">/ 100</span>
+                </div>
+                <template x-if="student.current_score === null">
+                  <span class="text-[10px] text-[#A16207] italic block">Saran Rubrik</span>
+                </template>
+              </div>
+
+              <!-- 1-Click Salin Nilai Button -->
+              <button
+                @click="copyGrade(student)"
+                class="px-3 py-2 rounded-xl text-xs font-bold transition-all shadow-xs flex items-center gap-1.5 active:scale-95"
+                :class="copiedGrades[`${student.nim}_${student.current_session || 1}`] 
+                  ? 'bg-[#059669] text-white animate-copy-success' 
+                  : 'bg-white text-[#78350F] border border-[#FDE68A] hover:bg-[#FEF3C7]'"
+                :title="`Salin nilai angka ${student.current_score || student.suggested_score || 85} ke papan klip`"
+              >
+                <template x-if="copiedGrades[`${student.nim}_${student.current_session || 1}`]">
+                  <span class="flex items-center gap-1">
+                    <i data-lucide="check" class="w-3.5 h-3.5"></i>
+                    <span>Tersalin! ✓</span>
+                  </span>
+                </template>
+                <template x-if="!copiedGrades[`${student.nim}_${student.current_session || 1}`]">
+                  <span class="flex items-center gap-1">
+                    <i data-lucide="copy" class="w-3.5 h-3.5 text-[#D97706]"></i>
+                    <span>Salin Nilai</span>
+                  </span>
+                </template>
+              </button>
+            </div>
+
+          </div>
+
+          <!-- Feedback Box (2 Paragraf Sesuai Standar Resmi UT) -->
+          <div class="space-y-2">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-[#78350F] flex items-center gap-1.5">
+                <i data-lucide="message-square" class="w-4 h-4 text-[#D97706]"></i>
+                Draf Feedback Dosen (Standar 2 Paragraf UT):
+              </span>
+
+              <!-- 1-Click Salin Feedback Button -->
+              <button
+                @click="copyFeedback(student)"
+                class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all shadow-xs flex items-center gap-1.5 active:scale-95"
+                :class="copiedFeedbacks[`${student.nim}_${student.current_session || 1}`] 
+                  ? 'bg-[#059669] text-white animate-copy-success' 
+                  : 'bg-gradient-to-r from-[#D97706] to-[#F59E0B] text-white hover:from-[#B45309] hover:to-[#D97706]'"
+                :title="`Salin seluruh teks feedback mahasiswa ${student.name} ke papan klip`"
+              >
+                <template x-if="copiedFeedbacks[`${student.nim}_${student.current_session || 1}`]">
+                  <span class="flex items-center gap-1">
+                    <i data-lucide="check" class="w-4 h-4"></i>
+                    <span>Tersalin! ✓</span>
+                  </span>
+                </template>
+                <template x-if="!copiedFeedbacks[`${student.nim}_${student.current_session || 1}`]">
+                  <span class="flex items-center gap-1">
+                    <i data-lucide="clipboard" class="w-4 h-4"></i>
+                    <span>Salin Feedback</span>
+                  </span>
+                </template>
+              </button>
+            </div>
+
+            <!-- Feedback Text Container (High Contrast, Ergonomic) -->
+            <div class="bg-[#FFFDF5] rounded-xl border border-[#FDE68A] p-4 text-[#451A03] font-sans text-sm leading-relaxed feedback-prose shadow-inner">
+              <template x-if="student.feedback">
+                <div x-text="student.feedback"></div>
+              </template>
+              <template x-if="!student.feedback">
+                <div class="text-[#A16207] italic text-xs">
+                  Draf feedback belum dievaluasi. Klik "⚡ Pindai Sesi Ini" untuk mengevaluasi jawaban mahasiswa secara otomatis sesuai rubrik UT.
+                </div>
+              </template>
+            </div>
+          </div>
+
+        </div>
+      </template>
+
+    </section>
+
+  </main>
+
+  <!-- ========================================== -->
+  <!-- 6. SCAN MODAL & REAL-TIME PROGRESS BAR     -->
+  <!-- ========================================== -->
+  <div 
+    x-show="scanModalOpen" 
+    x-cloak
+    class="fixed inset-0 z-50 overflow-y-auto bg-black/40 backdrop-blur-xs flex items-center justify-center p-4"
+    @keydown.escape.window="closeScanModal()"
+  >
+    <div 
+      class="bg-white rounded-2xl border border-[#FDE68A] shadow-2xl max-w-lg w-full p-6 space-y-5"
+      @click.away="closeScanModal()"
+    >
+      
+      <!-- Modal Header -->
+      <div class="flex items-center justify-between pb-3 border-b border-[#FEF9C3]">
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-xl bg-[#FEF3C7] text-[#D97706] flex items-center justify-center">
+            <i data-lucide="refresh-cw" class="w-5 h-5" :class="{'animate-spin': scanStatus.is_running}"></i>
+          </div>
+          <div>
+            <h3 class="text-base font-bold text-[#451A03]">Sinkronisasi Data Tuton UT</h3>
+            <p class="text-xs text-[#78350F]">Scraping tanggapan & evaluasi rubrik otomatis</p>
+          </div>
+        </div>
+        <button 
+          @click="closeScanModal()" 
+          class="text-[#78350F] hover:text-[#451A03] p-1 rounded-lg hover:bg-[#FEF3C7]"
+        >
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <!-- Form Inputs (Disabled while running) -->
+      <div class="space-y-3" :class="{'opacity-60 pointer-events-none': scanStatus.is_running}">
+        <div>
+          <label class="block text-xs font-bold text-[#78350F] uppercase tracking-wider mb-1">Target Sesi</label>
+          <select 
+            x-model="scanForm.session_num"
+            class="w-full bg-[#FFFDF5] border border-[#FDE68A] rounded-xl px-3 py-2 text-xs font-semibold text-[#451A03] focus:ring-2 focus:ring-[#D97706]"
+          >
+            <option :value="''">Semua Sesi Aktif</option>
+            <template x-for="s in 8" :key="s">
+              <option :value="s" x-text="`Sesi ${s} ${isSessionTugas(s) ? '(Tugas)' : '(Diskusi)'}`"></option>
+            </template>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-[#78350F] uppercase tracking-wider mb-1">Target Kelas</label>
+          <select 
+            x-model="scanForm.course_id"
+            class="w-full bg-[#FFFDF5] border border-[#FDE68A] rounded-xl px-3 py-2 text-xs font-semibold text-[#451A03] focus:ring-2 focus:ring-[#D97706]"
+          >
+            <option value="">Semua 4 Kelas</option>
+            <template x-for="course in courses" :key="course.id">
+              <option :value="String(course.id)" x-text="`${course.code} (${course.name})`"></option>
+            </template>
+          </select>
+        </div>
+
+        <!-- Dry Run Mode Option -->
+        <label class="flex items-center gap-2 cursor-pointer pt-1">
+          <input 
+            type="checkbox" 
+            x-model="scanForm.dry_run"
+            class="w-4 h-4 text-[#D97706] rounded border-[#FDE68A] focus:ring-[#D97706]"
+          >
+          <span class="text-xs font-semibold text-[#78350F]">
+            Mode Simulasi (Dry Run tanpa login UT sesungguhnya)
+          </span>
+        </label>
+      </div>
+
+      <!-- Real-Time Progress Bar Section -->
+      <div class="bg-[#FFFDF5] rounded-xl border border-[#FDE68A] p-4 space-y-3">
+        <div class="flex items-center justify-between text-xs font-bold">
+          <span class="text-[#78350F] flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full" :class="scanStatus.is_running ? 'bg-[#059669] animate-ping' : 'bg-[#D97706]'"></span>
+            <span x-text="scanStatus.is_running ? 'Sedang Memindai...' : 'Status Pemindaian:'"></span>
+          </span>
+          <span class="text-[#D97706] font-mono" x-text="`${scanStatus.progress || 0}%`">0%</span>
+        </div>
+
+        <!-- Progress Bar Track -->
+        <div class="w-full bg-[#FEF3C7] rounded-full h-3 overflow-hidden p-0.5 border border-[#FDE68A]">
+          <div 
+            class="bg-gradient-to-r from-[#D97706] to-[#F59E0B] h-full rounded-full transition-all duration-300 progress-animated-stripes"
+            :style="`width: ${scanStatus.progress || 0}%`"
+          ></div>
+        </div>
+
+        <!-- Step Message -->
+        <p class="text-xs text-[#78350F] italic" x-text="scanStatus.message || 'Menunggu tindakan...'"></p>
+
+        <!-- Live Scan Logs (if available) -->
+        <template x-if="scanStatus.log && scanStatus.log.length > 0">
+          <div class="max-h-28 overflow-y-auto bg-white rounded-lg p-2 text-[11px] font-mono text-[#451A03] border border-[#FEF9C3] space-y-1">
+            <template x-for="(line, lIdx) in scanStatus.log" :key="lIdx">
+              <div class="text-[#78350F]" x-text="line"></div>
+            </template>
+          </div>
+        </template>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="flex items-center justify-end gap-2 pt-2">
+        <button
+          @click="closeScanModal()"
+          class="px-4 py-2 text-xs font-semibold rounded-xl bg-gray-100 text-gray-700 hover:bg-gray-200 transition-all"
+        >
+          Tutup
+        </button>
+
+        <button
+          x-show="!scanStatus.is_running"
+          @click="triggerScan()"
+          class="px-4 py-2 text-xs font-bold rounded-xl bg-gradient-to-r from-[#D97706] to-[#F59E0B] text-white hover:from-[#B45309] hover:to-[#D97706] transition-all shadow-sm active:scale-95 flex items-center gap-1.5"
+        >
+          <i data-lucide="play" class="w-4 h-4"></i>
+          <span>Mulai Pemindaian</span>
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- 7. EDIT SUBMISSION / FEEDBACK MODAL        -->
+  <!-- ========================================== -->
+  <div 
+    x-show="editModalOpen" 
+    x-cloak
+    class="fixed inset-0 z-50 overflow-y-auto bg-black/40 backdrop-blur-xs flex items-center justify-center p-4"
+    @keydown.escape.window="editModalOpen = false"
+  >
+    <div 
+      class="bg-white rounded-2xl border border-[#FDE68A] shadow-2xl max-w-xl w-full p-6 space-y-4"
+      @click.away="editModalOpen = false"
+    >
+      <div class="flex items-center justify-between pb-3 border-b border-[#FEF9C3]">
+        <div>
+          <h3 class="text-base font-bold text-[#451A03]">Sunting Penilaian Mahasiswa</h3>
+          <p class="text-xs text-[#78350F]" x-text="`${editForm.student_name} (NIM: ${editForm.student_nim})`"></p>
+        </div>
+        <button @click="editModalOpen = false" class="text-[#78350F] hover:text-[#451A03] p-1 rounded-lg">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <div class="space-y-3">
+        <div>
+          <label class="block text-xs font-bold text-[#78350F] uppercase tracking-wider mb-1">Nilai Angka (Skala 0 - 100)</label>
+          <input 
+            type="number" 
+            min="0" 
+            max="100" 
+            x-model="editForm.score"
+            class="w-full bg-[#FFFDF5] border border-[#FDE68A] rounded-xl px-3 py-2 text-sm font-bold text-[#451A03] focus:ring-2 focus:ring-[#D97706]"
+          >
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-[#78350F] uppercase tracking-wider mb-1">Draf Feedback 2 Paragraf</label>
+          <textarea 
+            rows="6" 
+            x-model="editForm.feedback"
+            class="w-full bg-[#FFFDF5] border border-[#FDE68A] rounded-xl p-3 text-xs text-[#451A03] leading-relaxed font-sans focus:ring-2 focus:ring-[#D97706]"
+            placeholder="Tuliskan 2 paragraf feedback sesuai standar UT..."
+          ></textarea>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-end gap-2 pt-2">
+        <button
+          @click="editModalOpen = false"
+          class="px-4 py-2 text-xs font-semibold rounded-xl bg-gray-100 text-gray-700 hover:bg-gray-200 transition-all"
+        >
+          Batal
+        </button>
+
+        <button
+          @click="saveSubmission()"
+          class="px-4 py-2 text-xs font-bold rounded-xl bg-[#059669] text-white hover:bg-emerald-700 transition-all shadow-sm active:scale-95 flex items-center gap-1.5"
+        >
+          <i data-lucide="check" class="w-4 h-4"></i>
+          <span>Simpan Penilaian</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- 8. FLOATING TOAST NOTIFICATION             -->
+  <!-- ========================================== -->
+  <div 
+    x-show="toast.show" 
+    x-transition:enter="transition ease-out duration-300"
+    x-transition:enter-start="opacity-0 transform translate-y-2"
+    x-transition:enter-end="opacity-100 transform translate-y-0"
+    x-transition:leave="transition ease-in duration-200"
+    x-transition:leave-start="opacity-100 transform translate-y-0"
+    x-transition:leave-end="opacity-0 transform translate-y-2"
+    class="fixed bottom-6 right-6 z-50 flex items-center gap-2.5 px-4 py-3 rounded-2xl shadow-xl text-xs font-bold border"
+    :class="{
+      'bg-[#059669] text-white border-emerald-400': toast.type === 'success',
+      'bg-[#D97706] text-white border-amber-400': toast.type === 'warning' || toast.type === 'info',
+      'bg-[#DC2626] text-white border-red-400': toast.type === 'error'
+    }"
+    role="alert"
+  >
+    <i :data-lucide="toast.type === 'success' ? 'check-circle' : 'info'" class="w-4 h-4"></i>
+    <span x-text="toast.message"></span>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- FOOTER                                     -->
+  <!-- ========================================== -->
+  <footer class="bg-white border-t border-[#FDE68A] py-4 text-center text-xs text-[#78350F] mt-auto">
+    <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
+      <p>
+        © 2026 Asisten Tutor Online UT — <strong>Ibu Ainur Rosyidah Azmie Putry, S.Pd., M.Pd.</strong> (NIP: 01007726)
+      </p>
+      <p class="text-[11px] text-[#A16207]">
+        Sistem Evaluasi Berbasis Rubrik Resmi Universitas Terbuka • MKWN4108 Bahasa Indonesia
+      </p>
+    </div>
+  </footer>
+
+</body>
+</html>
