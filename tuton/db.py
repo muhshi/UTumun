@@ -124,6 +124,11 @@ class Database:
                 )
             """)
 
+            cursor.execute("""
+                CREATE INDEX IF NOT EXISTS idx_submissions_course_session 
+                ON submissions (course_id, session_num)
+            """)
+
             # 5. Tabel scan_logs
             cursor.execute("""
                 CREATE TABLE IF NOT EXISTS scan_logs (
