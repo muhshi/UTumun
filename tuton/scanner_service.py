@@ -123,7 +123,13 @@ class ScannerService:
             self.message = "Membuka browser & memeriksa autentikasi e-learning..."
 
             async with async_playwright() as p:
-                browser = await p.chromium.launch(executable_path=CHROME_PATH, headless=True)
+                launch_kwargs = {
+                    "headless": True,
+                    "args": ["--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage"],
+                }
+                if CHROME_PATH and os.path.exists(CHROME_PATH):
+                    launch_kwargs["executable_path"] = CHROME_PATH
+                browser = await p.chromium.launch(**launch_kwargs)
                 try:
                     context = await browser.new_context(
                         storage_state=SESSION_FILE if os.path.exists(SESSION_FILE) else None,

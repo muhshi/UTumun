@@ -214,3 +214,41 @@ def test_scanner_service_mocked_assignment_scan():
 
 def test_module_singleton():
     assert isinstance(scanner_service, ScannerService)
+
+
+def test_scanner_service_uses_bundled_chromium_when_chrome_path_missing():
+    async def _test():
+        db = Database(":memory:")
+        db.init_db()
+        service = ScannerService(db=db)
+
+        mock_playwright_cm = AsyncMock()
+        mock_pw_inst = AsyncMock()
+        mock_playwright_cm.__aenter__.return_value = mock_pw_inst
+        mock_playwright_cm.__aexit__.return_value = None
+
+        mock_browser = AsyncMock()
+        mock_context = AsyncMock()
+        mock_page = AsyncMock()
+
+        mock_pw_inst.chromium.launch.return_value = mock_browser
+        mock_browser.new_context.return_value = mock_context
+        mock_context.new_page.return_value = mock_page
+
+        with patch("tuton.scanner_service.CHROME_PATH", "/nonexistent/chromium/binary"), \
+             patch("tuton.scanner_service.async_playwright", return_value=mock_playwright_cm), \
+             patch("tuton.scanner_service.ensure_authenticated_page", new_callable=AsyncMock) as mock_auth, \
+             patch("tuton.scanner_service.scrape_session_assign", new_callable=AsyncMock) as mock_assign:
+
+            mock_auth.return_value = True
+            mock_assign.return_value = {"submissions": []}
+
+            await service.start_scan(session_num=3, course_id="45934", dry_run=False)
+            await service.task
+
+            launch_call_kwargs = mock_pw_inst.chromium.launch.call_args.kwargs
+            assert "executable_path" not in launch_call_kwargs
+            assert launch_call_kwargs.get("headless") is True
+            assert "--no-sandbox" in launch_call_kwargs.get("args", [])
+
+    asyncio.run(_test())

@@ -26,7 +26,13 @@ async def run_pipeline(session_target: str = "all", mode: str = "full"):
         sessions = [int(session_target)]
 
     async with async_playwright() as p:
-        browser = await p.chromium.launch(executable_path=CHROME_PATH, headless=True)
+        launch_kwargs = {
+            "headless": True,
+            "args": ["--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage"],
+        }
+        if CHROME_PATH and os.path.exists(CHROME_PATH):
+            launch_kwargs["executable_path"] = CHROME_PATH
+        browser = await p.chromium.launch(**launch_kwargs)
         context = await browser.new_context(
             storage_state=SESSION_FILE if os.path.exists(SESSION_FILE) else None,
             user_agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36"

@@ -16,7 +16,7 @@ services:
       - ./.auth:/app/.auth
     environment:
       - PORT=8020
-      - CHROME_PATH=/root/.cache/ms-playwright/chromium-1155/chrome-linux/chrome
+      - CHROME_PATH=
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:8020/api/recap || exit 1"]
       interval: 30s

@@ -39,8 +39,8 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt
 
-# Install Playwright Chromium browser
-RUN playwright install chromium
+# Install Playwright Chromium browser and system dependencies
+RUN playwright install --with-deps chromium
 
 # Copy application source code
 COPY . .
