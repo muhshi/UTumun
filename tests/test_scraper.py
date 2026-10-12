@@ -45,3 +45,17 @@ def test_parse_assignment_grade_and_status():
     score, status = parse_assignment_grade_and_status("")
     assert score is None
     assert status == "pending"
+
+    score, status = parse_assignment_grade_and_status("Grade User grade / 100.00")
+    assert score is None
+    assert status == "pending"
+
+
+def test_clean_html_feedback():
+    from tuton.scraper import clean_html_feedback
+    raw = '<div class="paragraph normal"><span>Halo Widyawati, terima kasih.</span></div>\n<div class="paragraph normal"><span>Kelebihan: Sangat rapi.</span></div>'
+    cleaned = clean_html_feedback(raw)
+    assert "Halo Widyawati, terima kasih." in cleaned
+    assert "Kelebihan: Sangat rapi." in cleaned
+    assert "<div" not in cleaned
+    assert clean_html_feedback("Feedback comments") == ""

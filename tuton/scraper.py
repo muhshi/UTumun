@@ -1,3 +1,4 @@
+import html
 import re
 from typing import Dict, Any, List, Tuple, Optional, Union
 from playwright.async_api import Page
@@ -12,17 +13,45 @@ def build_flat_topic_url(raw_topic_url: str) -> str:
     return f"https://elearning.ut.ac.id/mod/forum/discuss.php?d={d_match.group(1)}&mode=1"
 
 def build_assignment_grading_url(cmid: str, perpage: int = 100) -> str:
-    """Membangun URL grading tugas dengan perpage=100 untuk menghindari pemotongan pagination."""
-    return f"https://elearning.ut.ac.id/mod/assign/view.php?id={cmid}&action=grading&perpage={perpage}&filter="
+    """Membangun URL grading tugas dengan perpage=100 dan reset filter inisial nama."""
+    return (
+        f"https://elearning.ut.ac.id/mod/assign/view.php?"
+        f"id={cmid}&action=grading&perpage={perpage}&filter=&tifirst=&tilast=&page=0"
+    )
+
+def clean_html_feedback(raw_html: str) -> str:
+    """Membersihkan tag HTML dari komentar feedback Moodle menjadi teks 2 paragraf yang rapi."""
+    if not raw_html:
+        return ""
+    text = raw_html.strip()
+    if text.lower() == "feedback comments":
+        return ""
+    text = re.sub(r"</(div|p|li|h[1-6])>", "\n", text, flags=re.IGNORECASE)
+    text = re.sub(r"<br\s*/?>", "\n", text, flags=re.IGNORECASE)
+    text = re.sub(r"<[^>]+>", "", text)
+    text = html.unescape(text)
+    paragraphs = []
+    for line in text.splitlines():
+        cleaned_line = " ".join(line.split())
+        if cleaned_line:
+            paragraphs.append(cleaned_line)
+    return "\n\n".join(paragraphs)
 
 def parse_assignment_grade_and_status(grade_text: str) -> Tuple[Optional[Union[int, float]], str]:
     """Mengekstrak skor numerik dan status ('completed'/'pending') dari teks nilai."""
-    if not grade_text or grade_text.strip() == "-":
+    if not grade_text:
         return None, "pending"
-    match = re.search(r'\d+(?:[.,]\d+)?', grade_text.strip())
+    # Bersihkan bagian penyebut '/ 100.00' dan label 'Grade User grade'
+    cleaned = grade_text.split("/")[0]
+    cleaned = re.sub(r"(?i)\b(grade|user\s+grade|nilai)\b", "", cleaned).strip()
+    if not cleaned or cleaned == "-":
+        return None, "pending"
+    match = re.search(r'\d+(?:[.,]\d+)?', cleaned)
     if not match:
         return None, "pending"
     val = float(match.group(0).replace(',', '.'))
+    if val < 0:
+        return None, "pending"
     score = int(val) if val.is_integer() else val
     return score, "completed"
 
@@ -104,33 +133,47 @@ async def scrape_session_assign(page: Page, course_id: str, session_num: int) ->
     if not cmid or not course_info:
         raise ValueError(f"Konfigurasi tugas tidak ditemukan untuk course {course_id} sesi {session_num}")
 
-    # 1. Buka ringkasan penugasan
-    assign_url = f"https://elearning.ut.ac.id/mod/assign/view.php?id={cmid}"
-    print(f"[SCRAPER] Membuka {course_info['name']} Tugas Sesi {session_num} ({assign_url})...")
-    await page.goto(assign_url, wait_until="domcontentloaded")
-    await page.wait_for_timeout(2500)
-
-    summary = await page.evaluate('''() => {
-        const rows = Array.from(document.querySelectorAll("table.generaltable tr"));
-        let res = {};
-        rows.forEach(tr => {
-            const th = tr.querySelector("th");
-            const td = tr.querySelector("td");
-            if (th && td) {
-                res[th.innerText.trim()] = td.innerText.trim();
-            }
-        });
-        return res;
-    }''')
-
-    # 2. Buka daftar pengumpulan yang butuh dinilai (action=grading)
+    # Buka daftar pengumpulan langsung pada tabel grading (action=grading)
     grading_url = build_assignment_grading_url(cmid, perpage=100)
-    print(f"[SCRAPER] Membuka tabel grading tugas: {grading_url}...")
-    await page.goto(grading_url, wait_until="domcontentloaded")
-    await page.wait_for_timeout(2500)
+    print(f"[SCRAPER] Membuka tabel grading tugas {course_info['name']} Sesi {session_num}: {grading_url}...")
+    await page.goto(grading_url, wait_until="domcontentloaded", timeout=30000)
+    await page.wait_for_timeout(1500)
+
+    # Cek apakah preferensi filter Moodle masih terkunci pada 'requiregrading' atau perpage kecil (< 100)
+    prefs = await page.evaluate('''() => {
+        const f = document.querySelector("select[name='filter']");
+        const p = document.querySelector("select[name='perpage']");
+        return {
+            hasForm: Boolean((f || p) && (f || p).closest("form")),
+            filter: f ? f.value : "",
+            perpage: p ? p.value : "-1"
+        };
+    }''')
+    if isinstance(prefs, dict) and prefs.get("hasForm"):
+        cur_filter = prefs.get("filter", "")
+        cur_perpage = str(prefs.get("perpage", "-1"))
+        if cur_filter != "" or cur_perpage not in ["-1", "100"]:
+            print(f"[SCRAPER] Mereset filter ({cur_filter!r}->'') & perpage ({cur_perpage!r}->'-1')...")
+            async with page.expect_navigation(wait_until="domcontentloaded", timeout=30000):
+                await page.evaluate('''() => {
+                    const f = document.querySelector("select[name='filter']");
+                    const p = document.querySelector("select[name='perpage']");
+                    if (f) f.value = "";
+                    if (p) p.value = "-1";
+                    const form = (f || p).closest("form");
+                    if (form) form.submit();
+                }''')
+            await page.wait_for_timeout(1500)
 
     students = await page.evaluate('''() => {
-        const trs = Array.from(document.querySelectorAll("table.generaltable tbody tr"));
+        let trs = Array.from(document.querySelectorAll("table.generaltable tbody tr")).filter(
+            tr => tr.id && tr.id.startsWith("mod_assign_grading") && !tr.classList.contains("emptyrow")
+        );
+        if (trs.length === 0) {
+            trs = Array.from(document.querySelectorAll("table.generaltable tbody tr")).filter(
+                tr => !tr.classList.contains("ygtvrow") && !tr.classList.contains("emptyrow")
+            );
+        }
         let list = [];
         trs.forEach(tr => {
             const userLink = tr.querySelector("td.cell.c2 a, td.fullname a, td:nth-child(3) a");
@@ -138,33 +181,58 @@ async def scrape_session_assign(page: Page, course_id: str, session_num: int) ->
             const gradeCell = tr.querySelector("td.cell.c5, td.grade");
             const fileCell = tr.querySelector("td.cell.c8, td.files");
             const feedbackCell = tr.querySelector("td.cell.c10, td.feedback");
+            const finalGradeCell = tr.querySelector("td.cell.c11, td.finalgrade");
 
             if (userLink && statusCell) {
                 const name = userLink.innerText.trim();
-                const gradeText = gradeCell ? gradeCell.innerText.trim() : "";
-                const fileText = fileCell ? fileCell.innerText.trim().replace(/\\s+/g, " ") : "";
-                const feedbackText = feedbackCell ? feedbackCell.innerText.trim() : "";
+                const statusRaw = statusCell.innerText.trim().replace(/\\s+/g, " ");
+                const statusLower = statusRaw.toLowerCase();
 
-                let score = null;
-                let status = "pending";
-                if (gradeText && gradeText !== "-") {
-                    const match = gradeText.match(/[0-9]+([.,][0-9]+)?/);
-                    if (match) {
-                        const parsed = parseFloat(match[0].replace(",", "."));
-                        if (!isNaN(parsed)) {
-                            score = Number.isInteger(parsed) ? parseInt(parsed, 10) : parsed;
-                            status = "completed";
-                        }
-                    }
+                const quickInput = gradeCell ? gradeCell.querySelector("input.quickgrade, input[type='text']") : null;
+                let gradeText = "";
+                if (quickInput) {
+                    gradeText = quickInput.value.trim();
+                } else if (finalGradeCell && finalGradeCell.innerText.trim() !== "-") {
+                    gradeText = finalGradeCell.innerText.split("/")[0].trim();
+                } else if (gradeCell) {
+                    gradeText = gradeCell.innerText.split("/")[0].replace(/Grade|User grade/gi, "").trim();
+                }
+
+                const fileLinks = fileCell
+                    ? Array.from(fileCell.querySelectorAll(".fileuploadsubmission a, a[href*='pluginfile.php']"))
+                        .map(a => a.innerText.trim())
+                        .filter(Boolean)
+                    : [];
+                const fileText = fileLinks.length > 0
+                    ? fileLinks.join(", ")
+                    : (fileCell ? fileCell.innerText.trim().replace(/\\s+/g, " ") : "");
+
+                const fbTextarea = feedbackCell ? feedbackCell.querySelector("textarea") : null;
+                const feedbackRaw = fbTextarea
+                    ? fbTextarea.value.trim()
+                    : (feedbackCell ? feedbackCell.innerText.replace(/^Feedback comments$/i, "").trim() : "");
+
+                const isNoSub = (
+                    statusLower.includes("no submission") ||
+                    statusLower.includes("belum ada") ||
+                    statusLower.includes("tidak ada pengumpulan")
+                );
+                const hasGrade = gradeText !== "" && gradeText !== "-" && /[0-9]/.test(gradeText);
+
+                // Hanya masukkan mahasiswa yang benar-benar sudah mengumpulkan tugas atau sudah memiliki nilai
+                if (isNoSub && !hasGrade && !fileText) {
+                    return;
                 }
 
                 list.push({
+                    id: tr.id || null,
                     author: name,
-                    status: status,
-                    score: score,
+                    statusRaw: statusRaw,
+                    status: "pending",
+                    score: null,
                     gradeText: gradeText,
                     fileText: fileText,
-                    feedbackText: feedbackText
+                    feedbackText: feedbackRaw
                 });
             }
         });
@@ -172,16 +240,22 @@ async def scrape_session_assign(page: Page, course_id: str, session_num: int) ->
     }''')
 
     for s in students:
-        if s.get("score") is None:
-            parsed_score, parsed_status = parse_assignment_grade_and_status(s.get("gradeText", ""))
-            if parsed_score is not None:
-                s["score"] = parsed_score
-                s["status"] = parsed_status
+        parsed_score, parsed_status = parse_assignment_grade_and_status(s.get("gradeText", ""))
+        s["score"] = parsed_score
+        s["status"] = parsed_status
+        s["feedbackText"] = clean_html_feedback(s.get("feedbackText", ""))
 
-    print(f"[SCRAPER] Berhasil mengekstrak {len(students)} mahasiswa pada {course_info['name']} Tugas Sesi {session_num}")
+    pending_count = sum(1 for s in students if s.get("status") != "completed")
+    summary = {
+        "Submitted": str(len(students)),
+        "Needs grading": str(pending_count),
+    }
+
+    print(f"[SCRAPER] Berhasil mengekstrak {len(students)} pengumpulan tugas pada {course_info['name']} Sesi {session_num}")
     return {
         "course": course_info,
         "session": session_num,
         "summary": summary,
         "submissions": students
     }
+

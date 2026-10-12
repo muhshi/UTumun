@@ -311,6 +311,25 @@ class Database:
             rows = conn.execute(query, params).fetchall()
             return [dict(r) for r in rows]
 
+    def delete_stale_submissions(
+        self, course_id: str, session_num: int, active_nims: List[str]
+    ) -> int:
+        """Menghapus data submission lama/sintetis yang tidak lagi ada pada hasil pindaian aktual UT."""
+        if not active_nims:
+            return 0
+        placeholders = ",".join("?" for _ in active_nims)
+        params: List[Any] = [str(course_id).strip(), int(session_num)] + [str(n).strip() for n in active_nims]
+        with self.get_connection() as conn:
+            cur = conn.execute(
+                f"""
+                DELETE FROM submissions
+                WHERE course_id = ? AND session_num = ?
+                  AND student_nim NOT IN ({placeholders})
+                """,
+                params,
+            )
+            return cur.rowcount
+
     def mark_feedback_copied(
         self, student_nim: str, course_id: str, session_num: int
     ) -> None:

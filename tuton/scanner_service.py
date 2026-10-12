@@ -153,30 +153,69 @@ class ScannerService:
                                 submissions = raw_data.get("submissions", [])
 
                                 self.message = f"Mengevaluasi rubrik & menyimpan ke database ({len(submissions)} mahasiswa)..."
+                                existing_map = {
+                                    sub["student_nim"]: sub
+                                    for sub in self.db.get_submissions(course_id=cid, session_num=s_num)
+                                }
+                                active_nims: List[str] = []
                                 for s in submissions:
                                     author_name, nim = parse_post_author_and_nim(s.get("author", ""), "")
                                     student_nim = nim if nim else author_name
+                                    active_nims.append(student_nim)
                                     self.db.upsert_student(nim=student_nim, name=author_name, course_id=cid)
 
-                                    # Cek apakah mahasiswa ini sudah tuntas atau sudah disalin (Inkremental)
-                                    existing_sub = self.db.get_submission(student_nim, cid, s_num)
-                                    if existing_sub and existing_sub.get("score") is not None and existing_sub.get("feedback"):
-                                        if existing_sub.get("is_copied") == 1:
-                                            continue
+                                    existing_sub = existing_map.get(student_nim)
+                                    scraped_score = s.get("score")
+                                    scraped_fb = (s.get("feedbackText") or "").strip()
 
-                                    eval_res = evaluate_submission(author_name, "", s_num)
-                                    score = eval_res.get("score")
-                                    feedback = eval_res.get("feedback")
-                                    self.db.upsert_submission(
-                                        student_nim=student_nim,
-                                        course_id=cid,
-                                        session_num=s_num,
-                                        post_id=s.get("id"),
-                                        content=s.get("fileText", ""),
-                                        score=score,
-                                        feedback=feedback,
-                                        status="draft",
-                                    )
+                                    if scraped_score is not None:
+                                        # Mahasiswa SUDAH dinilai di web e-learning UT
+                                        real_score = int(scraped_score) if float(scraped_score).is_integer() else scraped_score
+                                        final_fb = scraped_fb
+                                        if not final_fb and existing_sub and existing_sub.get("feedback"):
+                                            final_fb = existing_sub["feedback"]
+                                        if not final_fb:
+                                            eval_res = evaluate_submission(author_name, s.get("fileText", ""), s_num)
+                                            final_fb = eval_res.get("feedback")
+
+                                        self.db.upsert_submission(
+                                            student_nim=student_nim,
+                                            course_id=cid,
+                                            session_num=s_num,
+                                            post_id=s.get("id"),
+                                            content=s.get("fileText", ""),
+                                            score=real_score,
+                                            original_score=real_score,
+                                            feedback=final_fb,
+                                            is_copied=1,
+                                            is_grade_copied=1,
+                                            status="completed",
+                                        )
+                                    else:
+                                        # Mahasiswa sudah kumpul tugas tetapi BELUM dinilai di web UT
+                                        if existing_sub and existing_sub.get("score") is not None and existing_sub.get("feedback") and existing_sub.get("status") in ["pending", "draft"]:
+                                            draft_score = existing_sub["score"]
+                                            draft_fb = existing_sub["feedback"]
+                                        else:
+                                            eval_res = evaluate_submission(author_name, s.get("fileText", ""), s_num)
+                                            draft_score = eval_res.get("score")
+                                            draft_fb = scraped_fb or eval_res.get("feedback")
+
+                                        self.db.upsert_submission(
+                                            student_nim=student_nim,
+                                            course_id=cid,
+                                            session_num=s_num,
+                                            post_id=s.get("id"),
+                                            content=s.get("fileText", ""),
+                                            score=draft_score,
+                                            feedback=draft_fb,
+                                            is_copied=0,
+                                            is_grade_copied=0,
+                                            status="pending",
+                                        )
+
+                                if active_nims and hasattr(self.db, "delete_stale_submissions"):
+                                    self.db.delete_stale_submissions(cid, s_num, active_nims)
                             else:
                                 self.message = f"Mengekstrak tanggapan mahasiswa forum sesi {s_num} - {cname}..."
                                 raw_data = await scrape_session_forum(page, cid, s_num)
@@ -222,40 +261,78 @@ class ScannerService:
 
                                 matched = match_feedbacks_to_students(list(student_map.values()), tutor_posts)
                                 self.message = f"Mengevaluasi rubrik & menyimpan ke database ({len(matched)} tanggapan)..."
-
+                                existing_map = {
+                                    sub["student_nim"]: sub
+                                    for sub in self.db.get_submissions(course_id=cid, session_num=s_num)
+                                }
+                                active_nims = []
                                 for st_item in matched:
                                     nim_val = st_item["nim"]
                                     name_val = st_item["name"]
+                                    active_nims.append(nim_val)
                                     self.db.upsert_student(nim=nim_val, name=name_val, course_id=cid)
 
-                                    # Cek apakah mahasiswa ini sudah tuntas atau sudah disalin (Inkremental)
-                                    existing_sub = self.db.get_submission(nim_val, cid, s_num)
-                                    if existing_sub and existing_sub.get("score") is not None and existing_sub.get("feedback"):
-                                        if existing_sub.get("is_copied") == 1 or (existing_sub.get("content") and existing_sub.get("content") == st_item.get("content")):
-                                            continue
+                                    existing_sub = existing_map.get(nim_val)
+                                    real_score = st_item.get("score")
+                                    real_feedback = st_item.get("feedback")
 
-                                    item_score = st_item.get("score")
-                                    item_feedback = st_item.get("feedback")
+                                    if real_score is not None:
+                                        # Mahasiswa SUDAH dinilai di forum e-learning UT
+                                        final_fb = real_feedback
+                                        if not final_fb and existing_sub and existing_sub.get("feedback"):
+                                            final_fb = existing_sub["feedback"]
+                                        if not final_fb:
+                                            eval_res = evaluate_submission(
+                                                name_val, st_item.get("content", ""), s_num
+                                            )
+                                            final_fb = eval_res.get("feedback")
 
-                                    if item_score is None or not item_feedback:
-                                        eval_res = evaluate_submission(
-                                            name_val, st_item.get("content", ""), s_num
+                                        self.db.upsert_submission(
+                                            student_nim=nim_val,
+                                            course_id=cid,
+                                            session_num=s_num,
+                                            post_id=st_item.get("postId"),
+                                            content=st_item.get("content"),
+                                            score=real_score,
+                                            original_score=real_score,
+                                            feedback=final_fb,
+                                            is_copied=1,
+                                            is_grade_copied=1,
+                                            status="completed",
                                         )
-                                        if item_score is None:
-                                            item_score = eval_res.get("score")
-                                        if not item_feedback:
-                                            item_feedback = eval_res.get("feedback")
+                                    else:
+                                        # Mahasiswa belum dinilai di web UT (masih butuh tindakan)
+                                        if (
+                                            existing_sub
+                                            and existing_sub.get("score") is not None
+                                            and existing_sub.get("feedback")
+                                            and existing_sub.get("status") in ["pending", "draft"]
+                                            and existing_sub.get("content") == st_item.get("content")
+                                        ):
+                                            draft_score = existing_sub["score"]
+                                            draft_fb = existing_sub["feedback"]
+                                        else:
+                                            eval_res = evaluate_submission(
+                                                name_val, st_item.get("content", ""), s_num
+                                            )
+                                            draft_score = eval_res.get("score")
+                                            draft_fb = real_feedback or eval_res.get("feedback")
 
-                                    self.db.upsert_submission(
-                                        student_nim=nim_val,
-                                        course_id=cid,
-                                        session_num=s_num,
-                                        post_id=st_item.get("postId"),
-                                        content=st_item.get("content"),
-                                        score=item_score,
-                                        feedback=item_feedback,
-                                        status="draft",
-                                    )
+                                        self.db.upsert_submission(
+                                            student_nim=nim_val,
+                                            course_id=cid,
+                                            session_num=s_num,
+                                            post_id=st_item.get("postId"),
+                                            content=st_item.get("content"),
+                                            score=draft_score,
+                                            feedback=draft_fb,
+                                            is_copied=0,
+                                            is_grade_copied=0,
+                                            status="pending",
+                                        )
+
+                                if active_nims and hasattr(self.db, "delete_stale_submissions"):
+                                    self.db.delete_stale_submissions(cid, s_num, active_nims)
 
                             completed_steps += 1
                 finally:

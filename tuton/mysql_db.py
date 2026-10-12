@@ -36,10 +36,28 @@ class MySQLDatabase:
         self.password = password or getattr(config, "MYSQL_PASSWORD", "")
         self.database = database or getattr(config, "MYSQL_DATABASE", "tuton_db")
         self._lock = threading.Lock()
+        self._local = threading.local()
 
-    @contextmanager
-    def get_connection(self):
-        """Context manager thread-safe untuk koneksi MySQL dengan DictCursor."""
+    def _get_or_create_conn(self):
+        import time
+        conn = getattr(self._local, "conn", None)
+        last_used = getattr(self._local, "last_used", 0.0)
+        now = time.time()
+        if conn is not None:
+            if now - last_used < 30.0:
+                self._local.last_used = now
+                return conn
+            try:
+                conn.ping(reconnect=True)
+                self._local.last_used = now
+                return conn
+            except Exception:
+                try:
+                    conn.close()
+                except Exception:
+                    pass
+                self._local.conn = None
+
         conn = pymysql.connect(
             host=self.host,
             port=self.port,
@@ -51,14 +69,23 @@ class MySQLDatabase:
             autocommit=False,
             connect_timeout=5,
         )
+        self._local.conn = conn
+        self._local.last_used = now
+        return conn
+
+    @contextmanager
+    def get_connection(self):
+        """Context manager thread-safe untuk koneksi MySQL persisten per-thread dengan DictCursor."""
+        conn = self._get_or_create_conn()
         try:
             yield conn
             conn.commit()
         except Exception:
-            conn.rollback()
+            try:
+                conn.rollback()
+            except Exception:
+                pass
             raise
-        finally:
-            conn.close()
 
     def init_db(self) -> None:
         """Inisialisasi tabel MySQL dan data awal (default courses & 8 sessions)."""
@@ -276,6 +303,26 @@ class MySQLDatabase:
             with conn.cursor() as cursor:
                 cursor.execute(query, tuple(params))
                 return list(cursor.fetchall())
+
+    def delete_stale_submissions(
+        self, course_id: str, session_num: int, active_nims: List[str]
+    ) -> int:
+        """Menghapus data submission lama/sintetis yang tidak lagi ada pada hasil pindaian aktual UT."""
+        if not active_nims:
+            return 0
+        placeholders = ",".join("%s" for _ in active_nims)
+        params: List[Any] = [str(course_id).strip(), int(session_num)] + [str(n).strip() for n in active_nims]
+        with self.get_connection() as conn:
+            with conn.cursor() as cursor:
+                cursor.execute(
+                    f"""
+                    DELETE FROM submissions
+                    WHERE course_id = %s AND session_num = %s
+                      AND student_nim NOT IN ({placeholders})
+                    """,
+                    tuple(params),
+                )
+                return cursor.rowcount
 
     def mark_feedback_copied(
         self, student_nim: str, course_id: str, session_num: int

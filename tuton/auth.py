@@ -68,8 +68,11 @@ async def ensure_authenticated_page(context: BrowserContext, page: Page) -> bool
     Jika sesi kedaluwarsa atau belum ada, lakukan login ulang secara otomatis.
     """
     print("[AUTH] Memeriksa validitas sesi di e-learning UT...")
-    await page.goto("https://elearning.ut.ac.id/my/", wait_until="domcontentloaded")
-    await page.wait_for_timeout(2000)
+    try:
+        await page.goto("https://elearning.ut.ac.id/my/", wait_until="domcontentloaded", timeout=20000)
+    except Exception:
+        await page.goto("https://elearning.ut.ac.id/login/index.php", wait_until="domcontentloaded", timeout=20000)
+    await page.wait_for_timeout(1500)
 
     needs_login = False
     current_url = page.url

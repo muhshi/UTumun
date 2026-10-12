@@ -32,9 +32,13 @@ COURSES = [
             1: {"cmid": "47302993", "name": "Forum Diskusi.1"},
             2: {"cmid": "47303004", "name": "Forum Diskusi.2"},
             4: {"cmid": "47303026", "name": "Forum Diskusi.4"},
+            6: {"cmid": "47303048", "name": "Forum Diskusi.6"},
+            8: {"cmid": "47303073", "name": "Forum Diskusi.8"},
         },
         "assignments": {
             3: {"cmid": "47303015", "name": "Tugas.1"},
+            5: {"cmid": "47303037", "name": "Tugas.2"},
+            7: {"cmid": "47303061", "name": "Tugas.3"},
         }
     },
     {
@@ -45,9 +49,13 @@ COURSES = [
             1: {"cmid": "47303711", "name": "Forum Diskusi.1"},
             2: {"cmid": "47303722", "name": "Forum Diskusi.2"},
             4: {"cmid": "47303744", "name": "Forum Diskusi.4"},
+            6: {"cmid": "47303766", "name": "Forum Diskusi.6"},
+            8: {"cmid": "47303803", "name": "Forum Diskusi.8"},
         },
         "assignments": {
             3: {"cmid": "47303733", "name": "Tugas.1"},
+            5: {"cmid": "47303755", "name": "Tugas.2"},
+            7: {"cmid": "47303779", "name": "Tugas.3"},
         }
     },
     {
@@ -58,9 +66,13 @@ COURSES = [
             1: {"cmid": "47304429", "name": "Forum Diskusi.1"},
             2: {"cmid": "47304452", "name": "Forum Diskusi.2"},
             4: {"cmid": "47304490", "name": "Forum Diskusi.4"},
+            6: {"cmid": "47304529", "name": "Forum Diskusi.6"},
+            8: {"cmid": "47304574", "name": "Forum Diskusi.8"},
         },
         "assignments": {
             3: {"cmid": "47304472", "name": "Tugas.1"},
+            5: {"cmid": "47304509", "name": "Tugas.2"},
+            7: {"cmid": "47304554", "name": "Tugas.3"},
         }
     },
     {
@@ -71,9 +83,13 @@ COURSES = [
             1: {"cmid": "46978721", "name": "Forum Diskusi.1"},
             2: {"cmid": "46978750", "name": "Forum Diskusi.2"},
             4: {"cmid": "46978799", "name": "Forum Diskusi.4"},
+            6: {"cmid": "46978834", "name": "Forum Diskusi.6"},
+            8: {"cmid": "46978864", "name": "Forum Diskusi.8"},
         },
         "assignments": {
             3: {"cmid": "46978783", "name": "Tugas.1"},
+            5: {"cmid": "46978817", "name": "Tugas.2"},
+            7: {"cmid": "46978852", "name": "Tugas.3"},
         }
     }
 ]
