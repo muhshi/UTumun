@@ -23,7 +23,7 @@ document.addEventListener('alpine:init', () => {
     // Filter Toolbar State
     selectedCourse: '',
     selectedSession: null,
-    statusFilter: 'all', // 'all' | 'pending' | 'evaluated'
+    statusFilter: 'pending', // Default tampilkan yang belum dinilai ('pending')
     searchQuery: '',
 
     // Micro-interaction Feedback Maps (nim_session -> boolean)
@@ -217,10 +217,10 @@ document.addEventListener('alpine:init', () => {
     resetFilters() {
       this.selectedCourse = '';
       this.selectedSession = null;
-      this.statusFilter = 'all';
+      this.statusFilter = 'pending';
       this.searchQuery = '';
       this.fetchStudents();
-      this.showToast('Filter telah direset ke seluruh data', 'info');
+      this.showToast('Filter direset (menampilkan mahasiswa yang perlu tindakan)', 'info');
     },
 
     /**

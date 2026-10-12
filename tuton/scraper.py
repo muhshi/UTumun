@@ -244,6 +244,22 @@ async def scrape_session_assign(page: Page, course_id: str, session_num: int) ->
         return list;
     }''')
 
+    # Kembalikan filter Moodle ke 'requiregrading' (Requires grading) agar saat Ibu Tutor membuka
+    # halaman tugas di elearning.ut.ac.id, yang tampil hanya tugas mahasiswa yang belum dinilai saja.
+    if isinstance(prefs, dict) and prefs.get("hasForm"):
+        try:
+            async with page.expect_navigation(wait_until="domcontentloaded", timeout=15000):
+                await page.evaluate('''() => {
+                    const f = document.querySelector("select[name='filter']");
+                    if (f && Array.from(f.options).some(o => o.value === "requiregrading")) {
+                        f.value = "requiregrading";
+                        const form = f.closest("form");
+                        if (form) form.submit();
+                    }
+                }''')
+        except Exception:
+            pass
+
     for s in students:
         parsed_score, parsed_status = parse_assignment_grade_and_status(s.get("gradeText", ""))
         s["score"] = parsed_score

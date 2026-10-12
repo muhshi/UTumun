@@ -492,18 +492,26 @@
         class="bg-white rounded-2xl border border-[#FDE68A] p-12 text-center shadow-sm"
       >
         <div class="w-16 h-16 rounded-2xl bg-[#FFFBEB] text-[#D97706] flex items-center justify-center mx-auto mb-3">
-          <i data-lucide="user-x" class="w-8 h-8"></i>
+          <i :data-lucide="statusFilter === 'pending' && countEvaluated > 0 ? 'check-circle-2' : 'user-x'" class="w-8 h-8"></i>
         </div>
-        <h3 class="text-base font-bold text-[#451A03]">Tidak ada mahasiswa yang cocok</h3>
-        <p class="text-xs text-[#78350F] mt-1 max-w-md mx-auto">
-          Tidak ditemukan mahasiswa untuk kriteria pencarian dan filter saat ini. Silakan ubah filter atau lakukan sinkronisasi data dari UT.
+        <h3 class="text-base font-bold text-[#451A03]" x-text="statusFilter === 'pending' && countEvaluated > 0 ? 'Semua mahasiswa pada filter ini sudah selesai dinilai! 🎉' : 'Tidak ada mahasiswa yang cocok'"></h3>
+        <p class="text-xs text-[#78350F] mt-1 max-w-md mx-auto" x-text="statusFilter === 'pending' && countEvaluated > 0 ? `Terdapat ${countEvaluated} mahasiswa yang sudah tuntas dinilai pada sesi/kelas ini.` : 'Tidak ditemukan mahasiswa untuk kriteria pencarian dan filter saat ini. Silakan ubah filter atau lakukan sinkronisasi data dari UT.'">
         </p>
-        <button
-          @click="resetFilters()"
-          class="mt-4 inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold rounded-xl bg-[#FEF3C7] text-[#78350F] border border-[#FDE68A] hover:bg-[#FDE68A] transition-all"
-        >
-          Reset Filter
-        </button>
+        <div class="mt-4 flex items-center justify-center gap-2">
+          <button
+            x-show="statusFilter === 'pending' && countEvaluated > 0"
+            @click="statusFilter = 'evaluated'"
+            class="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold rounded-xl bg-[#ECFDF5] text-[#059669] border border-[#A7F3D0] hover:bg-[#D1FAE5] transition-all"
+          >
+            Lihat yang Sudah Dinilai (<span x-text="countEvaluated"></span>)
+          </button>
+          <button
+            @click="resetFilters()"
+            class="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold rounded-xl bg-[#FEF3C7] text-[#78350F] border border-[#FDE68A] hover:bg-[#FDE68A] transition-all"
+          >
+            Reset Filter
+          </button>
+        </div>
       </div>
 
       <!-- Student Cards List -->
