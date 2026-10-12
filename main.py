@@ -21,7 +21,7 @@ async def run_pipeline(session_target: str = "all", mode: str = "full"):
     mode='full': Tahap 1 kemudian Tahap 2
     """
     if session_target == "all":
-        sessions = [1, 2, 3, 4]
+        sessions = [1, 2, 3, 4, 5]
     else:
         sessions = [int(session_target)]
 

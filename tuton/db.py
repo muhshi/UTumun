@@ -169,13 +169,14 @@ class Database:
                 close_dt = open_dt + timedelta(days=14)
                 open_date_str = open_dt.strftime("%Y-%m-%d")
                 close_date_str = close_dt.strftime("%Y-%m-%d")
+                s_status = "closed" if s_num <= 3 else ("active" if s_num in (4, 5) else "upcoming")
 
                 cursor.execute(
                     """
-                    INSERT OR IGNORE INTO sessions (session_num, type, title, open_date, close_date, status)
+                    INSERT OR REPLACE INTO sessions (session_num, type, title, open_date, close_date, status)
                     VALUES (?, ?, ?, ?, ?, ?)
                     """,
-                    (s_num, s_type, s_title, open_date_str, close_date_str, "open"),
+                    (s_num, s_type, s_title, open_date_str, close_date_str, s_status),
                 )
 
     def get_courses(self) -> List[Dict[str, Any]]:

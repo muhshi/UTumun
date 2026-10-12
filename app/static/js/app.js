@@ -268,7 +268,7 @@ document.addEventListener('alpine:init', () => {
       if (active.length > 0) {
         return active.map(s => `Sesi ${s.session_num}`).join(' & ') + ' Aktif';
       }
-      return 'Sesi 1 & 2 Aktif';
+      return 'Sesi 4 & 5 Aktif';
     },
 
     /**

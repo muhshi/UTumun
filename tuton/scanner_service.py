@@ -104,7 +104,7 @@ class ScannerService:
                 return
 
             sessions: List[int] = (
-                [int(session_num)] if session_num is not None else [1, 2, 3, 4]
+                [int(session_num)] if session_num is not None else [1, 2, 3, 4, 5]
             )
 
             if course_id:

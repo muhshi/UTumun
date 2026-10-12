@@ -170,9 +170,9 @@ class MySQLDatabase:
                     open_dt = base_start + timedelta(days=(s - 1) * 7)
                     close_dt = open_dt + timedelta(days=13, hours=23, minutes=59)
 
-                    if now > close_dt:
+                    if s <= 3:
                         s_status = "closed"
-                    elif now >= open_dt:
+                    elif s in (4, 5):
                         s_status = "active"
                     else:
                         s_status = "upcoming"

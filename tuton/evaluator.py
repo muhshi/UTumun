@@ -139,7 +139,7 @@ def evaluate_submission(student_name: str, content: str, session_num: int) -> Di
             f"Pertahankan ketelitian, penalaran ilmiah yang kritis, dan motivasi belajar yang tinggi untuk tugas-tugas selanjutnya!"
         )
 
-    else:
+    elif session_num == 4:
         # Rubrik Sesi 4 (Diskusi 4): Ciri Kalimat Efektif, Pleonasme Pohon Tabebuya Bojonegoro & Perbaikan Kalimat
         has_pleonasme = any(k in c_lower for k in ["pleonasme", "pemborosan", "kehematan", "hemat", "mubazir", "berlebihan"])
         has_ciri = any(k in c_lower for k in ["kehematan", "kelogisan", "keparalelan", "ketegasan", "kesepadanan", "kecermatan"])
@@ -175,6 +175,36 @@ def evaluate_submission(student_name: str, content: str, session_num: int) -> Di
         p2 = (
             f"Sebagai catatan penyempurnaan ke depan, Saudara dapat lebih memperkuat analisis dengan {saran_str}. "
             f"Pertahankan kecermatan berbahasa dan cara berpikir analitis ini pada sesi-sesi diskusi mendatang!"
+        )
+
+    else:
+        # Rubrik Sesi 5 (Tugas 2): Judul Artikel, Identifikasi & Perbaikan Kutipan Ilmiah, Daftar Pustaka, Kondisi Bahasa Daerah & Peribahasa
+        has_kutipan = any(k in c_lower for k in ["kutipan", "yudhistira", "oudri", "kbbi", "liputan6", "kemendikbud"])
+        has_dapus = any(k in c_lower for k in ["daftar pustaka", "referensi", "pustaka"])
+        has_bahasa_daerah = any(k in c_lower for k in ["718", "bahasa daerah", "punah", "kritis", "1340"])
+        has_peribahasa = "peribahasa" in c_lower
+        has_bmp = "mkwn4108" in c_lower or "bmp" in c_lower or "modul" in c_lower
+
+        score = 88
+        if has_kutipan: score += 2
+        if has_dapus: score += 2
+        if has_bahasa_daerah: score += 1
+        if has_peribahasa: score += 1
+        if has_bmp: score += 1
+
+        score = min(max(score, 88), 95)
+
+        p1 = (
+            f"Halo {name}, terima kasih atas pengunggahan Tugas 2 yang telah Saudara kerjakan dengan sangat baik, rapi, dan terstruktur. "
+            f"Keunggulan jawaban Saudara tampak pada ketepatan merumuskan judul artikel yang representatif, kecermatan menandai serta "
+            f"memperbaiki tata cara penulisan kutipan ilmiah (seperti kutipan KBBI, Yudhistira dkk. 2022, serta sumber daring), "
+            f"sekaligus kemampuan menguraikan kondisi kekayaan 718 bahasa daerah Indonesia dan contoh peribahasa secara bernas."
+        )
+
+        p2 = (
+            f"Sebagai catatan penyempurnaan ke depan, Saudara dapat lebih mencermati konsistensi tanda baca, penulisan huruf miring "
+            f"pada judul sumber di bagian daftar pustaka, serta menambahkan rujukan Buku Materi Pokok (BMP MKWN4108) UT agar "
+            f"landasan teori karya ilmiah semakin kokoh. Pertahankan ketelitian dan semangat belajar ini pada sesi-sesi selanjutnya!"
         )
 
     return {

@@ -57,3 +57,21 @@ def test_evaluate_submission_sesi4():
     assert "Halo Elly Susanti Agustina" in paragraphs[0]
     assert "NIM" not in paragraphs[0]
 
+
+def test_evaluate_submission_sesi5():
+    student_content = """
+    1. Judul artikel: Keberagaman Bahasa Daerah di Indonesia.
+    2. Kutipan ilmiah: Kamus Besar Bahasa Indonesia (KBBI) dan Yudhistira dkk. (2022) sudah diperbaiki sesuai kaidah kutipan langsung dan tidak langsung serta daftar pustaka.
+    3. Terdapat 718 bahasa daerah di Indonesia yang sebagian mengalami keterancaman.
+    4. Peribahasa: Di mana bumi dipijak, di situ langit dijunjung.
+    BMP MKWN4108 modul 5.
+    """
+    res = evaluate_submission(student_name="ELLY SUSANTI AGUSTINA", content=student_content, session_num=5)
+    assert res["score"] >= 90
+    paragraphs = [p for p in res["feedback"].split("\n\n") if p.strip()]
+    assert len(paragraphs) == 2
+    assert "Halo Elly Susanti Agustina" in paragraphs[0]
+    assert "NIM" not in paragraphs[0]
+    assert "Tugas 2" in paragraphs[0]
+
+
