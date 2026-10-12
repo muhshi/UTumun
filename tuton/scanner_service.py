@@ -193,12 +193,16 @@ class ScannerService:
                                         )
                                     else:
                                         # Mahasiswa sudah kumpul tugas tetapi BELUM dinilai di web UT
-                                        if existing_sub and existing_sub.get("score") is not None and existing_sub.get("feedback") and existing_sub.get("status") in ["pending", "draft"]:
+                                        if existing_sub and existing_sub.get("score") is not None and existing_sub.get("feedback") and existing_sub.get("status") in ["pending", "draft"] and existing_sub["score"] >= 88:
                                             draft_score = existing_sub["score"]
                                             draft_fb = existing_sub["feedback"]
                                         else:
                                             eval_res = evaluate_submission(author_name, s.get("fileText", ""), s_num)
-                                            draft_score = eval_res.get("score")
+                                            draft_score = eval_res.get("score") or 90
+                                            traj = self.db.get_student_trajectory(student_nim, cid)
+                                            prev_scores = [t["score"] for t in traj if t["session"] < s_num and t.get("score") is not None]
+                                            if prev_scores:
+                                                draft_score = min(max(draft_score, prev_scores[-1] + 1), 95)
                                             draft_fb = scraped_fb or eval_res.get("feedback")
 
                                         self.db.upsert_submission(
@@ -208,6 +212,7 @@ class ScannerService:
                                             post_id=s.get("id"),
                                             content=s.get("fileText", ""),
                                             score=draft_score,
+                                            original_score=draft_score,
                                             feedback=draft_fb,
                                             is_copied=0,
                                             is_grade_copied=0,

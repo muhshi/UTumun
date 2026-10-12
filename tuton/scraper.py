@@ -139,30 +139,35 @@ async def scrape_session_assign(page: Page, course_id: str, session_num: int) ->
     await page.goto(grading_url, wait_until="domcontentloaded", timeout=30000)
     await page.wait_for_timeout(1500)
 
-    # Cek apakah preferensi filter Moodle masih terkunci pada 'requiregrading' atau perpage kecil (< 100)
+    # Pastikan preferensi filter Moodle disetel ke 'submitted' (hanya menampilkan mahasiswa yang sudah
+    # mengumpulkan tugas, baik yang sudah dinilai maupun belum dinilai, sehingga baris 'No submission'
+    # tidak ikut tampil membingungkan di halaman e-learning UT) dan perpage '-1' (Semua).
     prefs = await page.evaluate('''() => {
         const f = document.querySelector("select[name='filter']");
         const p = document.querySelector("select[name='perpage']");
+        const hasSubmittedOpt = f ? Array.from(f.options).some(o => o.value === "submitted") : false;
         return {
             hasForm: Boolean((f || p) && (f || p).closest("form")),
             filter: f ? f.value : "",
+            targetFilter: hasSubmittedOpt ? "submitted" : "",
             perpage: p ? p.value : "-1"
         };
     }''')
     if isinstance(prefs, dict) and prefs.get("hasForm"):
         cur_filter = prefs.get("filter", "")
+        target_filter = prefs.get("targetFilter", "submitted")
         cur_perpage = str(prefs.get("perpage", "-1"))
-        if cur_filter != "" or cur_perpage not in ["-1", "100"]:
-            print(f"[SCRAPER] Mereset filter ({cur_filter!r}->'') & perpage ({cur_perpage!r}->'-1')...")
+        if cur_filter != target_filter or cur_perpage not in ["-1", "100"]:
+            print(f"[SCRAPER] Menyesuaikan filter ({cur_filter!r}->{target_filter!r}) & perpage ({cur_perpage!r}->'-1')...")
             async with page.expect_navigation(wait_until="domcontentloaded", timeout=30000):
-                await page.evaluate('''() => {
+                await page.evaluate('''(targetFilter) => {
                     const f = document.querySelector("select[name='filter']");
                     const p = document.querySelector("select[name='perpage']");
-                    if (f) f.value = "";
+                    if (f) f.value = targetFilter;
                     if (p) p.value = "-1";
                     const form = (f || p).closest("form");
                     if (form) form.submit();
-                }''')
+                }''', target_filter)
             await page.wait_for_timeout(1500)
 
     students = await page.evaluate('''() => {

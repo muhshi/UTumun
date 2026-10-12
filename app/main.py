@@ -9,6 +9,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel, Field
 
+import tuton.config as config
 from tuton.db import Database, get_db
 from tuton.scanner_service import ScannerService, scanner_service
 

@@ -250,8 +250,8 @@ class MySQLDatabase:
                         score = COALESCE(VALUES(score), submissions.score),
                         original_score = COALESCE(VALUES(original_score), submissions.original_score),
                         feedback = COALESCE(VALUES(feedback), submissions.feedback),
-                        is_copied = CASE WHEN VALUES(is_copied) != 0 THEN VALUES(is_copied) ELSE submissions.is_copied END,
-                        is_grade_copied = CASE WHEN VALUES(is_grade_copied) != 0 THEN VALUES(is_grade_copied) ELSE submissions.is_grade_copied END,
+                        is_copied = CASE WHEN VALUES(status) = 'pending' THEN VALUES(is_copied) WHEN VALUES(is_copied) != 0 THEN VALUES(is_copied) ELSE submissions.is_copied END,
+                        is_grade_copied = CASE WHEN VALUES(status) = 'pending' THEN VALUES(is_grade_copied) WHEN VALUES(is_grade_copied) != 0 THEN VALUES(is_grade_copied) ELSE submissions.is_grade_copied END,
                         status = COALESCE(VALUES(status), submissions.status),
                         updated_at = VALUES(updated_at)
                 """, (
@@ -427,7 +427,9 @@ class MySQLDatabase:
             feedback = current_sub.get("feedback") if current_sub else None
 
             sub_status = current_sub.get("status", "pending") if current_sub else "pending"
-            if is_copied == 1:
+            if sub_status == "pending":
+                item_status = "pending"
+            elif is_copied == 1 or sub_status == "copied":
                 item_status = "copied"
             elif sub_status in ["completed", "graded", "evaluated"]:
                 item_status = "completed"

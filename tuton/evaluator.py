@@ -107,16 +107,18 @@ def evaluate_submission(student_name: str, content: str, session_num: int) -> Di
         has_paragraf = len(content.strip().split("\n")) >= 2 or len(content.strip()) >= 200
         has_bmp = "mkwn4108" in c_lower or "bmp" in c_lower or "modul" in c_lower
 
-        score = 80
-        if has_nasional_negara: score += 3
-        if has_sumpah_pemuda: score += 2
-        if has_uud45: score += 2
-        if has_uu24: score += 3
-        if has_pemersatu: score += 2
-        if has_paragraf: score += 2
-        if has_bmp: score += 2
-
-        score = min(max(score, 82), 95)
+        if len(content.split()) < 20 and any(ext in c_lower for ext in [".pdf", ".doc", ".docx", "tugas", "file"]):
+            score = 92
+        else:
+            score = 80
+            if has_nasional_negara: score += 3
+            if has_sumpah_pemuda: score += 2
+            if has_uud45: score += 2
+            if has_uu24: score += 3
+            if has_pemersatu: score += 2
+            if has_paragraf: score += 2
+            if has_bmp: score += 2
+            score = min(max(score, 82), 95)
 
         p1 = (
             f"Halo {name}, terima kasih atas pengunggahan Tugas 1 yang telah Saudara susun dengan sangat baik "

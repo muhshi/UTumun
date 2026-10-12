@@ -195,12 +195,14 @@ document.addEventListener('alpine:init', () => {
     filterByCell(courseId, sessionNum) {
       this.selectedCourse = String(courseId);
       this.selectedSession = Number(sessionNum);
-      this.statusFilter = 'all';
+      const cell = this.getMatrixCell(courseId, sessionNum);
+      this.statusFilter = (cell && cell.pending > 0) ? 'pending' : 'all';
       this.searchQuery = '';
       this.fetchStudents();
 
       const courseCode = this.getCourseCode(courseId);
-      this.showToast(`Menyaring: ${courseCode} • Sesi ${sessionNum}`, 'info');
+      const modeLabel = (cell && cell.pending > 0) ? `(${cell.pending} Perlu Tindakan)` : '(Semua Mahasiswa)';
+      this.showToast(`Menyaring: ${courseCode} • Sesi ${sessionNum} ${modeLabel}`, 'info');
 
       // Scroll mulus ke daftar mahasiswa
       const el = document.getElementById('student-list-section');

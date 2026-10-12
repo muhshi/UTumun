@@ -510,7 +510,7 @@
       <template x-for="(student, idx) in filteredStudents" :key="`${student.nim}_${student.course_id}_${student.current_session || 0}`">
         <div 
           class="bg-white rounded-2xl border border-[#FDE68A] shadow-sm hover:shadow-md transition-all duration-200 p-5 space-y-4 relative"
-          :class="{'border-l-4 border-l-[#D97706]': student.status === 'pending', 'border-l-4 border-l-[#059669]': student.status === 'evaluated'}"
+          :class="{'border-l-4 border-l-[#D97706]': student.status === 'pending', 'border-l-4 border-l-[#059669]': ['completed', 'evaluated', 'copied', 'graded'].includes(student.status)}"
         >
           
           <!-- Card Header: Student Info & Status -->
@@ -544,10 +544,10 @@
               <!-- Status Selesai / Pending -->
               <span 
                 class="px-2.5 py-1 rounded-full text-xs font-bold inline-flex items-center gap-1 shadow-xs"
-                :class="student.status === 'evaluated' && student.current_score !== null ? 'bg-[#ECFDF5] text-[#059669] border border-[#A7F3D0]' : 'bg-[#FFFBEB] text-[#D97706] border border-[#FDE68A]'"
+                :class="['completed', 'evaluated', 'copied', 'graded'].includes(student.status) && student.current_score !== null ? 'bg-[#ECFDF5] text-[#059669] border border-[#A7F3D0]' : 'bg-[#FFFBEB] text-[#D97706] border border-[#FDE68A]'"
               >
-                <i :data-lucide="student.status === 'evaluated' && student.current_score !== null ? 'check-circle' : 'clock'" class="w-3.5 h-3.5"></i>
-                <span x-text="student.status === 'evaluated' && student.current_score !== null ? 'Selesai Dinilai' : 'Perlu Tindakan'"></span>
+                <i :data-lucide="['completed', 'evaluated', 'copied', 'graded'].includes(student.status) && student.current_score !== null ? 'check-circle' : 'clock'" class="w-3.5 h-3.5"></i>
+                <span x-text="['completed', 'evaluated', 'copied', 'graded'].includes(student.status) && student.current_score !== null ? 'Selesai Dinilai' : 'Perlu Tindakan'"></span>
               </span>
 
               <!-- Badge Sudah Disalin -->
@@ -588,11 +588,11 @@
                     <span 
                       class="px-2 py-1 rounded-lg text-xs font-bold transition-all shadow-2xs"
                       :class="{
-                        'bg-[#FEF3C7] text-[#78350F] border border-[#FDE68A]': traj.session_num !== student.current_session,
-                        'bg-gradient-to-r from-[#D97706] to-[#F59E0B] text-white shadow-sm ring-2 ring-[#FDE68A]': traj.session_num === student.current_session
+                        'bg-[#FEF3C7] text-[#78350F] border border-[#FDE68A]': (traj.session || traj.session_num) !== student.current_session,
+                        'bg-gradient-to-r from-[#D97706] to-[#F59E0B] text-white shadow-sm ring-2 ring-[#FDE68A]': (traj.session || traj.session_num) === student.current_session
                       }"
                     >
-                      <span x-text="`S${traj.session_num}: `"></span>
+                      <span x-text="`S${traj.session || traj.session_num}: `"></span>
                       <span class="font-extrabold" x-text="traj.score !== null ? traj.score : '-'"></span>
                     </span>
 

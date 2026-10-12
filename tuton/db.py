@@ -251,8 +251,8 @@ class Database:
                     score = COALESCE(excluded.score, submissions.score),
                     original_score = COALESCE(excluded.original_score, submissions.original_score),
                     feedback = COALESCE(excluded.feedback, submissions.feedback),
-                    is_copied = CASE WHEN excluded.is_copied != 0 THEN excluded.is_copied ELSE submissions.is_copied END,
-                    is_grade_copied = CASE WHEN excluded.is_grade_copied != 0 THEN excluded.is_grade_copied ELSE submissions.is_grade_copied END,
+                    is_copied = CASE WHEN excluded.status = 'pending' THEN excluded.is_copied WHEN excluded.is_copied != 0 THEN excluded.is_copied ELSE submissions.is_copied END,
+                    is_grade_copied = CASE WHEN excluded.status = 'pending' THEN excluded.is_grade_copied WHEN excluded.is_grade_copied != 0 THEN excluded.is_grade_copied ELSE submissions.is_grade_copied END,
                     status = COALESCE(excluded.status, submissions.status),
                     updated_at = excluded.updated_at
                 """,
@@ -291,6 +291,7 @@ class Database:
         course_id: Optional[str] = None,
         session_num: Optional[int] = None,
         student_nim: Optional[str] = None,
+        status: Optional[str] = None,
     ) -> List[Dict[str, Any]]:
         """Mengambil data submission dengan filter opsional."""
         query = "SELECT * FROM submissions WHERE 1=1"
@@ -305,6 +306,9 @@ class Database:
         if student_nim:
             query += " AND student_nim = ?"
             params.append(str(student_nim))
+        if status:
+            query += " AND status = ?"
+            params.append(str(status))
 
         query += " ORDER BY session_num ASC, student_nim ASC"
 
@@ -360,6 +364,25 @@ class Database:
                 """,
                 (now_str, str(student_nim).strip(), str(course_id).strip(), int(session_num)),
             )
+
+    def get_student_trajectory(
+        self, student_nim: str, course_id: str
+    ) -> List[Dict[str, Any]]:
+        """Mengambil lintasan nilai per sesi untuk seorang mahasiswa."""
+        with self.get_connection() as conn:
+            rows = conn.execute(
+                """
+                SELECT session_num, score
+                FROM submissions
+                WHERE student_nim = ? AND course_id = ? AND score IS NOT NULL
+                ORDER BY session_num ASC
+                """,
+                (str(student_nim).strip(), str(course_id).strip()),
+            ).fetchall()
+            return [
+                {"session": r["session_num"], "score": r["score"]}
+                for r in rows
+            ]
 
     def get_students_with_trajectory(
         self,
@@ -441,7 +464,9 @@ class Database:
             feedback = current_sub.get("feedback") if current_sub else None
 
             sub_status = current_sub.get("status", "pending") if current_sub else "pending"
-            if is_copied == 1:
+            if sub_status == "pending":
+                item_status = "pending"
+            elif is_copied == 1 or sub_status == "copied":
                 item_status = "copied"
             elif sub_status in ["completed", "graded", "evaluated"]:
                 item_status = "completed"
