@@ -62,10 +62,10 @@
   <script src="https://unpkg.com/lucide@latest"></script>
 
   <!-- Custom Theme Stylesheet -->
-  <link rel="stylesheet" href="/static/css/style.css">
+  <link rel="stylesheet" href="/static/css/style.css?v=2.2">
 
   <!-- Alpine.js Application Controller -->
-  <script src="/static/js/app.js"></script>
+  <script src="/static/js/app.js?v=2.2"></script>
   <!-- Alpine.js Core CDN -->
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 </head>
@@ -549,6 +549,36 @@
 
             <!-- Status & Action Badges -->
             <div class="flex items-center gap-2">
+              <!-- Tombol Cepat Kirim ke UT di Header Kartu -->
+              <button
+                @click="submitToUt(student)"
+                :disabled="submittingUt[`${student.nim}_${student.current_session || selectedSession || 1}`] || submittedUt[`${student.nim}_${student.current_session || selectedSession || 1}`]"
+                class="px-3 py-1 rounded-xl text-xs font-bold transition-all shadow-xs flex items-center gap-1 active:scale-95 text-white"
+                :class="submittedUt[`${student.nim}_${student.current_session || selectedSession || 1}`]
+                  ? 'bg-[#059669] cursor-not-allowed opacity-90'
+                  : (submittingUt[`${student.nim}_${student.current_session || selectedSession || 1}`] ? 'bg-amber-600 animate-pulse cursor-wait' : 'bg-[#0284C7] hover:bg-[#0369A1]')"
+                :title="`Kirim nilai (${student.current_score || student.suggested_score || 85}) dan feedback ke web UT`"
+              >
+                <template x-if="submittingUt[`${student.nim}_${student.current_session || selectedSession || 1}`]">
+                  <span class="flex items-center gap-1">
+                    <svg class="animate-spin h-3 w-3 text-white" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>
+                    <span>Mengirim...</span>
+                  </span>
+                </template>
+                <template x-if="submittedUt[`${student.nim}_${student.current_session || selectedSession || 1}`]">
+                  <span class="flex items-center gap-1">
+                    <i data-lucide="check-check" class="w-3.5 h-3.5"></i>
+                    <span>Terkirim UT ✓</span>
+                  </span>
+                </template>
+                <template x-if="!submittingUt[`${student.nim}_${student.current_session || selectedSession || 1}`] && !submittedUt[`${student.nim}_${student.current_session || selectedSession || 1}`]">
+                  <span class="flex items-center gap-1">
+                    <i data-lucide="send" class="w-3.5 h-3.5"></i>
+                    <span>🚀 Kirim ke UT</span>
+                  </span>
+                </template>
+              </button>
+
               <!-- Status Selesai / Pending -->
               <span 
                 class="px-2.5 py-1 rounded-full text-xs font-bold inline-flex items-center gap-1 shadow-xs"
@@ -687,12 +717,12 @@
                 <!-- Tombol Kirim ke UT (Single-flight per feedback) -->
                 <button
                   @click="submitToUt(student)"
-                  :disabled="submittingUt[`${student.nim}_${student.current_session || selectedSession || 1}`] || submittedUt[`${student.nim}_${student.current_session || selectedSession || 1}`] || (['completed', 'evaluated', 'copied', 'graded'].includes(student.status) && student.is_copied === 1)"
+                  :disabled="submittingUt[`${student.nim}_${student.current_session || selectedSession || 1}`] || submittedUt[`${student.nim}_${student.current_session || selectedSession || 1}`]"
                   class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all shadow-xs flex items-center gap-1.5 active:scale-95"
                   :class="{
-                    'bg-[#059669] text-white cursor-not-allowed opacity-90': submittedUt[`${student.nim}_${student.current_session || selectedSession || 1}`] || (['completed', 'evaluated', 'copied', 'graded'].includes(student.status) && student.is_copied === 1),
+                    'bg-[#059669] text-white cursor-not-allowed opacity-90': submittedUt[`${student.nim}_${student.current_session || selectedSession || 1}`],
                     'bg-amber-600 text-white animate-pulse cursor-wait': submittingUt[`${student.nim}_${student.current_session || selectedSession || 1}`],
-                    'bg-[#0284C7] hover:bg-[#0369A1] text-white': !submittingUt[`${student.nim}_${student.current_session || selectedSession || 1}`] && !submittedUt[`${student.nim}_${student.current_session || selectedSession || 1}`] && !(['completed', 'evaluated', 'copied', 'graded'].includes(student.status) && student.is_copied === 1)
+                    'bg-[#0284C7] hover:bg-[#0369A1] text-white': !submittingUt[`${student.nim}_${student.current_session || selectedSession || 1}`] && !submittedUt[`${student.nim}_${student.current_session || selectedSession || 1}`]
                   }"
                   :title="`Kirim nilai (${student.current_score || student.suggested_score || 85}) dan feedback ${student.name} langsung ke website UT`"
                 >
@@ -705,16 +735,16 @@
                       <span>Mengirim...</span>
                     </span>
                   </template>
-                  <template x-if="submittedUt[`${student.nim}_${student.current_session || selectedSession || 1}`] || (['completed', 'evaluated', 'copied', 'graded'].includes(student.status) && student.is_copied === 1)">
+                  <template x-if="submittedUt[`${student.nim}_${student.current_session || selectedSession || 1}`]">
                     <span class="flex items-center gap-1">
                       <i data-lucide="check-check" class="w-3.5 h-3.5"></i>
                       <span>Terkirim ke UT ✓</span>
                     </span>
                   </template>
-                  <template x-if="!submittingUt[`${student.nim}_${student.current_session || selectedSession || 1}`] && !submittedUt[`${student.nim}_${student.current_session || selectedSession || 1}`] && !(['completed', 'evaluated', 'copied', 'graded'].includes(student.status) && student.is_copied === 1)">
+                  <template x-if="!submittingUt[`${student.nim}_${student.current_session || selectedSession || 1}`] && !submittedUt[`${student.nim}_${student.current_session || selectedSession || 1}`]">
                     <span class="flex items-center gap-1">
                       <i data-lucide="send" class="w-3.5 h-3.5"></i>
-                      <span>Kirim ke UT</span>
+                      <span>🚀 Kirim ke UT</span>
                     </span>
                   </template>
                 </button>
@@ -947,10 +977,18 @@
 
         <button
           @click="saveSubmission()"
-          class="px-4 py-2 text-xs font-bold rounded-xl bg-[#059669] text-white hover:bg-emerald-700 transition-all shadow-sm active:scale-95 flex items-center gap-1.5"
+          class="px-4 py-2 text-xs font-bold rounded-xl bg-amber-600 text-white hover:bg-amber-700 transition-all shadow-sm active:scale-95 flex items-center gap-1.5"
         >
-          <i data-lucide="check" class="w-4 h-4"></i>
-          <span>Simpan Penilaian</span>
+          <i data-lucide="save" class="w-4 h-4"></i>
+          <span>Simpan Draf</span>
+        </button>
+
+        <button
+          @click="saveAndSubmitToUt()"
+          class="px-4 py-2 text-xs font-bold rounded-xl bg-[#0284C7] text-white hover:bg-[#0369A1] transition-all shadow-sm active:scale-95 flex items-center gap-1.5"
+        >
+          <i data-lucide="send" class="w-4 h-4"></i>
+          <span>🚀 Simpan & Kirim ke UT</span>
         </button>
       </div>
     </div>

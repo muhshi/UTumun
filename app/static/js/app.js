@@ -486,6 +486,31 @@ document.addEventListener('alpine:init', () => {
     },
 
     /**
+     * Simpan Perubahan dan Langsung Kirim ke UT
+     */
+    async saveAndSubmitToUt() {
+      const sNim = this.editForm.student_nim;
+      const cId = this.editForm.course_id;
+      const sNum = this.editForm.session_num;
+      const scoreVal = this.editForm.score;
+      const fbVal = this.editForm.feedback;
+      const sName = this.editForm.student_name;
+
+      await this.saveSubmission();
+
+      const studentObj = {
+        nim: sNim,
+        name: sName,
+        course_id: cId,
+        current_session: sNum,
+        current_score: scoreVal,
+        feedback: fbVal
+      };
+
+      await this.submitToUt(studentObj);
+    },
+
+    /**
      * Buka Scan Modal
      */
     openScanModal(sessionNum = null, courseId = '') {
