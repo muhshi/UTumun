@@ -139,22 +139,84 @@ async def submit_single_grade_to_ut(
                         return {"success": False, "message": "Kolom input nilai tidak ditemukan pada halaman grader UT"}
                     await grade_locator.fill(str(score))
 
-                    # 2. Isi komentar feedback
-                    fb_editable = page.locator("#id_assignfeedbackcomments_editoreditable")
-                    if await fb_editable.count() > 0 and await fb_editable.is_visible():
-                        await fb_editable.fill(feedback)
-                    else:
-                        fb_textarea = page.locator("textarea#id_assignfeedbackcomments_editor, textarea[name='assignfeedbackcomments_editor[text]']")
-                        if await fb_textarea.count() > 0:
-                            await fb_textarea.fill(feedback)
+                    # 2. Isi komentar feedback (Universal untuk Moodle Atto, TinyMCE, dan Textarea)
+                    feedback_saved = await page.evaluate('''({rawFeedback}) => {
+                        // Format ke paragraf HTML yang rapi untuk editor Moodle
+                        const paragraphs = rawFeedback.split(/\\n\\s*\\n/).map(p => p.trim()).filter(Boolean);
+                        const htmlFeedback = paragraphs.map(p => `<p>${p.replace(/\\n/g, "<br>")}</p>`).join("");
+                        
+                        let applied = false;
+
+                        // 1. Coba Atto Editor (contenteditable div)
+                        const attoDiv = document.querySelector("#id_assignfeedbackcomments_editoreditable, div[id*='assignfeedbackcomments'][contenteditable='true']");
+                        if (attoDiv) {
+                            attoDiv.innerHTML = htmlFeedback;
+                            attoDiv.dispatchEvent(new Event("input", { bubbles: true }));
+                            attoDiv.dispatchEvent(new Event("change", { bubbles: true }));
+                            applied = true;
+                        }
+
+                        // 2. Coba TinyMCE iframe
+                        const tinyIframe = document.querySelector("iframe#id_assignfeedbackcomments_editor_ifr, iframe[id*='assignfeedbackcomments']");
+                        if (tinyIframe && tinyIframe.contentDocument && tinyIframe.contentDocument.body) {
+                            tinyIframe.contentDocument.body.innerHTML = htmlFeedback;
+                            tinyIframe.contentDocument.body.dispatchEvent(new Event("input", { bubbles: true }));
+                            applied = true;
+                        }
+
+                        // 3. Selalu perbarui juga hidden textarea Moodle agar form submission valid
+                        const textareas = Array.from(document.querySelectorAll("textarea")).filter(
+                            t => (t.id && t.id.includes("assignfeedbackcomments")) || (t.name && t.name.includes("assignfeedbackcomments"))
+                        );
+                        for (const ta of textareas) {
+                            ta.value = htmlFeedback;
+                            ta.dispatchEvent(new Event("input", { bubbles: true }));
+                            ta.dispatchEvent(new Event("change", { bubbles: true }));
+                            applied = true;
+                        }
+
+                        // 4. Sinkronisasi via API TinyMCE jika tersedia di window
+                        if (window.tinyMCE) {
+                            try {
+                                for (const editor of Object.values(window.tinyMCE.editors || {})) {
+                                    if (editor.id && editor.id.includes("assignfeedbackcomments")) {
+                                        editor.setContent(htmlFeedback);
+                                        applied = true;
+                                    }
+                                }
+                            } catch(e) {}
+                        }
+
+                        return applied;
+                    }''', {"rawFeedback": feedback})
+
+                    if not feedback_saved:
+                        logger.warning(f"Editor feedback Moodle tidak terdeteksi via selector standar untuk {student_nim}")
 
                     # 3. Klik tombol Simpan Perubahan (Save changes)
-                    save_btn = page.locator("button[name='savechanges'], input[name='savechanges'], button:has-text('Save changes')").first
-                    if await save_btn.count() == 0:
-                        return {"success": False, "message": "Tombol simpan nilai tidak ditemukan pada halaman grader UT"}
+                    save_clicked = await page.evaluate('''() => {
+                        const btn = document.querySelector(
+                            "button[name='savechanges'], input[name='savechanges'], button.btn-primary[type='submit'], input.btn-primary[type='submit']"
+                        ) || Array.from(document.querySelectorAll("button, input[type='submit'], input[type='button']")).find(
+                            el => (el.value || el.innerText || "").toLowerCase().includes("save changes") || (el.value || el.innerText || "").toLowerCase().includes("simpan perubahan")
+                        );
 
-                    await save_btn.click()
-                    await page.wait_for_timeout(2500)
+                        if (btn) {
+                            btn.scrollIntoView({ behavior: 'instant', block: 'center' });
+                            btn.click();
+                            return true;
+                        }
+                        return false;
+                    }''')
+
+                    if not save_clicked:
+                        save_btn = page.locator("button[name='savechanges'], input[name='savechanges'], button:has-text('Save changes'), button:has-text('Simpan perubahan')").first
+                        if await save_btn.count() > 0:
+                            await save_btn.click()
+                        else:
+                            return {"success": False, "message": "Tombol simpan nilai tidak ditemukan pada halaman grader UT"}
+
+                    await page.wait_for_timeout(3000)
 
                     logger.info(f"Berhasil menyimpan nilai {score} untuk NIM {student_nim} pada Tugas Sesi {session_num}")
 
