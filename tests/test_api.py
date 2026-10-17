@@ -177,3 +177,13 @@ def test_post_submit_to_ut_mocked(client, test_db, monkeypatch):
     data = response.json()
     assert data["success"] is True
     assert "berhasil" in data["message"]
+
+
+def test_root_template_submit_bindings(client):
+    response = client.get("/")
+    assert response.status_code == 200
+    html = response.text
+    # Pastikan binding tombol submit menggunakan helper aman dan tidak menghasilkan disabled permanen
+    assert "isSubmittingUt(student)" in html
+    assert "isSubmittedUt(student)" in html
+    assert "app.js?v=2.3" in html

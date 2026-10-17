@@ -357,13 +357,34 @@ document.addEventListener('alpine:init', () => {
     },
 
     /**
+     * Helper status pengiriman ke UT (Reaktif & Aman)
+     */
+    isSubmittingUt(student) {
+      if (!student) return false;
+      const sNum = student.current_session || this.selectedSession || 1;
+      const key = `${student.nim}_${sNum}`;
+      return Boolean(this.submittingUt && this.submittingUt[key]);
+    },
+
+    isSubmittedUt(student) {
+      if (!student) return false;
+      const sNum = student.current_session || this.selectedSession || 1;
+      const key = `${student.nim}_${sNum}`;
+      return Boolean(this.submittedUt && this.submittedUt[key]);
+    },
+
+    /**
      * Kirim Nilai dan Feedback ke E-learning UT (1-Klik Push Per Feedback)
      */
     async submitToUt(student) {
+      if (!student) return;
       const sNum = student.current_session || this.selectedSession || 1;
       const key = `${student.nim}_${sNum}`;
 
-      if (this.submittingUt[key] || this.submittedUt[key]) return;
+      if (this.isSubmittingUt(student) || this.isSubmittedUt(student)) {
+        console.warn(`[UT_SUBMIT] Pengiriman untuk ${student.name} (${key}) sedang berjalan atau sudah selesai.`);
+        return;
+      }
 
       const scoreVal = student.current_score !== null && student.current_score !== undefined
         ? student.current_score
@@ -375,8 +396,14 @@ document.addEventListener('alpine:init', () => {
         return;
       }
 
-      this.submittingUt[key] = true;
+      // Reaktif: perbarui referensi objek submittingUt
+      this.submittingUt = { ...this.submittingUt, [key]: true };
       this.showToast(`Mengirim nilai (${scoreVal}) & feedback untuk ${student.name} ke e-learning UT...`, "info");
+      console.log(`[UT_SUBMIT] Memulai pengiriman nilai & feedback untuk ${student.name} (${student.nim}) Sesi ${sNum}...`);
+
+      const userIdVal = (student.submission && student.submission.post_id)
+        ? student.submission.post_id
+        : (student.post_id || null);
 
       try {
         const resp = await fetch("/api/submissions/submit-to-ut", {
@@ -389,13 +416,13 @@ document.addEventListener('alpine:init', () => {
             score: Number(scoreVal),
             feedback: feedbackVal,
             student_name: student.name,
-            userid: student.post_id || null
+            userid: userIdVal
           })
         });
 
         const res = await resp.json();
         if (resp.ok && res.success) {
-          this.submittedUt[key] = true;
+          this.submittedUt = { ...this.submittedUt, [key]: true };
           student.status = "completed";
           student.is_copied = 1;
           this.showToast(`Berhasil! ${res.message}`, "success");
@@ -407,7 +434,7 @@ document.addEventListener('alpine:init', () => {
         console.error("Error submitting to UT:", err);
         this.showToast(`Kesalahan jaringan: ${err.message}`, "error");
       } finally {
-        this.submittingUt[key] = false;
+        this.submittingUt = { ...this.submittingUt, [key]: false };
         this.refreshIcons();
       }
     },
