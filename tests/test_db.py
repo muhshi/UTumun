@@ -91,6 +91,24 @@ def test_student_and_submission_upsert(test_db):
     assert subs[0]["is_copied"] == 0
     assert subs[0]["is_grade_copied"] == 0
 
+    # Test update_submission alias works identically
+    test_db.update_submission(
+        student_nim="041234567",
+        course_id="413073",
+        session_num=1,
+        score=92,
+        feedback="Ulasan sangat baik",
+        is_copied=1,
+        is_grade_copied=1,
+        status="completed"
+    )
+    subs = test_db.get_submissions(course_id="413073", session_num=1)
+    assert len(subs) == 1
+    assert subs[0]["score"] == 92
+    assert subs[0]["is_copied"] == 1
+    assert subs[0]["is_grade_copied"] == 1
+    assert subs[0]["status"] == "completed"
+
 
 def test_students_with_trajectory_and_lower_score_warning(test_db):
     """Test trajectory calculation, lower score warning, and auto-suggested grade."""

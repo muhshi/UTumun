@@ -269,6 +269,9 @@ class MySQLDatabase:
                     updated_at,
                 ))
 
+    # Alias kompatibilitas
+    update_submission = upsert_submission
+
     def get_submission(
         self, student_nim: str, course_id: str, session_num: int
     ) -> Optional[Dict[str, Any]]:

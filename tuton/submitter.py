@@ -266,8 +266,8 @@ async def submit_single_grade_to_ut(
                         }
                     await page.wait_for_timeout(2000)
 
-                # Update database lokal SQLite & MySQL server
-                db.update_submission(
+                # Update database aktif (SQLite atau MySQL via get_db)
+                db.upsert_submission(
                     student_nim=student_nim,
                     course_id=course_id,
                     session_num=session_num,
@@ -278,12 +278,12 @@ async def submit_single_grade_to_ut(
                     status="completed"
                 )
 
-                # Jika MySQL aktif, update juga di MySQL
-                if DB_ENGINE == "mysql":
+                # Jika MySQL aktif namun instance db di atas adalah SQLite, pastikan juga tersimpan ke MySQL
+                if DB_ENGINE == "mysql" and type(db).__name__ != "MySQLDatabase":
                     try:
                         from tuton.mysql_db import MySQLDatabase
                         m_db = MySQLDatabase()
-                        m_db.update_submission(
+                        m_db.upsert_submission(
                             student_nim=student_nim,
                             course_id=course_id,
                             session_num=session_num,
