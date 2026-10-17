@@ -4,6 +4,7 @@ from typing import Dict, Any, List, Tuple, Optional, Union
 from playwright.async_api import Page
 from tuton.config import get_course_info, get_forum_cmid, get_assign_cmid, COURSES
 from tuton.matcher import clean_student_name
+from tuton.file_extractor import extract_text_from_bytes
 
 def build_flat_topic_url(raw_topic_url: str) -> str:
     r"""Mengekstrak d=(\d+) dan membangun URL flat mode bersih tanpa fragment hash."""
@@ -193,7 +194,18 @@ async def scrape_session_assign(page: Page, course_id: str, session_num: int) ->
                 const statusRaw = statusCell.innerText.trim().replace(/\\s+/g, " ");
                 const statusLower = statusRaw.toLowerCase();
 
+                let userId = null;
+                if (userLink && userLink.href) {
+                    const match = userLink.href.match(/[?&]id=(\\d+)/);
+                    if (match) userId = match[1];
+                }
+
                 const quickInput = gradeCell ? gradeCell.querySelector("input.quickgrade, input[type='text']") : null;
+                if (!userId && quickInput && quickInput.name) {
+                    const match = quickInput.name.match(/quickgrade_(\\d+)/);
+                    if (match) userId = match[1];
+                }
+
                 let gradeText = "";
                 if (quickInput) {
                     gradeText = quickInput.value.trim();
@@ -205,11 +217,12 @@ async def scrape_session_assign(page: Page, course_id: str, session_num: int) ->
 
                 const fileLinks = fileCell
                     ? Array.from(fileCell.querySelectorAll(".fileuploadsubmission a, a[href*='pluginfile.php']"))
-                        .map(a => a.innerText.trim())
-                        .filter(Boolean)
+                        .map(a => ({ name: a.innerText.trim(), href: a.href }))
+                        .filter(x => Boolean(x.name && x.href))
                     : [];
-                const fileText = fileLinks.length > 0
-                    ? fileLinks.join(", ")
+                const fileNames = fileLinks.map(f => f.name).filter(Boolean);
+                const fileText = fileNames.length > 0
+                    ? fileNames.join(", ")
                     : (fileCell ? fileCell.innerText.trim().replace(/\\s+/g, " ") : "");
 
                 const fbTextarea = feedbackCell ? feedbackCell.querySelector("textarea") : null;
@@ -231,18 +244,41 @@ async def scrape_session_assign(page: Page, course_id: str, session_num: int) ->
 
                 list.push({
                     id: tr.id || null,
+                    userId: userId,
                     author: name,
                     statusRaw: statusRaw,
                     status: "pending",
                     score: null,
                     gradeText: gradeText,
                     fileText: fileText,
+                    files: fileLinks,
                     feedbackText: feedbackRaw
                 });
             }
         });
         return list;
     }''')
+
+    # Ekstrak konten berkas tugas (PDF/DOCX) secara otomatis dari e-learning UT
+    for s in students:
+        extracted_content = ""
+        for f_obj in s.get("files", []):
+            f_url = f_obj.get("href")
+            f_name = f_obj.get("name", "")
+            if f_url and ("pluginfile.php" in f_url or f_name.lower().endswith((".pdf", ".docx", ".doc"))):
+                try:
+                    resp = await page.context.request.get(f_url)
+                    if resp.status == 200:
+                        raw_bytes = await resp.body()
+                        text = extract_text_from_bytes(f_name, raw_bytes)
+                        if text:
+                            extracted_content = text
+                            break
+                except Exception as e:
+                    print(f"[SCRAPER] Peringatan: Gagal mengunduh berkas {f_name}: {e}")
+
+        s["content"] = extracted_content if extracted_content else s.get("fileText", "")
+        s["postId"] = s.get("userId")
 
     # Kembalikan filter Moodle ke 'requiregrading' (Requires grading) agar saat Ibu Tutor membuka
     # halaman tugas di elearning.ut.ac.id, yang tampil hanya tugas mahasiswa yang belum dinilai saja.

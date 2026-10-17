@@ -154,3 +154,26 @@ def test_export_csv(client):
     assert "attachment" in response.headers.get("content-disposition", "")
     assert "filename=" in response.headers.get("content-disposition", "")
     assert "Course ID" in response.text
+
+
+def test_post_submit_to_ut_mocked(client, test_db, monkeypatch):
+    from unittest.mock import AsyncMock
+    import tuton.submitter
+
+    mock_submit = AsyncMock(return_value={"success": True, "message": "Nilai 92 dan feedback berhasil dikirim ke UT!"})
+    monkeypatch.setattr(tuton.submitter, "submit_single_grade_to_ut", mock_submit)
+
+    payload = {
+        "student_nim": "041234567",
+        "course_id": "413073",
+        "session_num": 5,
+        "score": 92,
+        "feedback": "Halo Budi, tugas sangat baik.\n\nPerbaiki daftar pustaka.",
+        "student_name": "Budi Santoso",
+        "userid": "12345"
+    }
+    response = client.post("/api/submissions/submit-to-ut", json=payload)
+    assert response.status_code == 200
+    data = response.json()
+    assert data["success"] is True
+    assert "berhasil" in data["message"]

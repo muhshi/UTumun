@@ -29,6 +29,8 @@ document.addEventListener('alpine:init', () => {
     // Micro-interaction Feedback Maps (nim_session -> boolean)
     copiedFeedbacks: {},
     copiedGrades: {},
+    submittingUt: {},
+    submittedUt: {},
 
     // Scan Modal State
     scanModalOpen: false,
@@ -351,6 +353,62 @@ document.addEventListener('alpine:init', () => {
       } catch (err) {
         console.error('Clipboard copy failed:', err);
         this.showToast('Gagal menyalin nilai angka', 'error');
+      }
+    },
+
+    /**
+     * Kirim Nilai dan Feedback ke E-learning UT (1-Klik Push Per Feedback)
+     */
+    async submitToUt(student) {
+      const sNum = student.current_session || this.selectedSession || 1;
+      const key = `${student.nim}_${sNum}`;
+
+      if (this.submittingUt[key] || this.submittedUt[key]) return;
+
+      const scoreVal = student.current_score !== null && student.current_score !== undefined
+        ? student.current_score
+        : (student.suggested_score !== null && student.suggested_score !== undefined ? student.suggested_score : 85);
+      const feedbackVal = student.feedback || "";
+
+      if (!feedbackVal) {
+        this.showToast("Draf feedback mahasiswa masih kosong. Silakan evaluasi terlebih dahulu.", "error");
+        return;
+      }
+
+      this.submittingUt[key] = true;
+      this.showToast(`Mengirim nilai (${scoreVal}) & feedback untuk ${student.name} ke e-learning UT...`, "info");
+
+      try {
+        const resp = await fetch("/api/submissions/submit-to-ut", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            student_nim: student.nim,
+            course_id: student.course_id,
+            session_num: Number(sNum),
+            score: Number(scoreVal),
+            feedback: feedbackVal,
+            student_name: student.name,
+            userid: student.post_id || null
+          })
+        });
+
+        const res = await resp.json();
+        if (resp.ok && res.success) {
+          this.submittedUt[key] = true;
+          student.status = "completed";
+          student.is_copied = 1;
+          this.showToast(`Berhasil! ${res.message}`, "success");
+          await this.fetchRecap();
+        } else {
+          this.showToast(`Gagal mengirim ke UT: ${res.detail || res.message || "Terjadi kesalahan"}`, "error");
+        }
+      } catch (err) {
+        console.error("Error submitting to UT:", err);
+        this.showToast(`Kesalahan jaringan: ${err.message}`, "error");
+      } finally {
+        this.submittingUt[key] = false;
+        this.refreshIcons();
       }
     },
 

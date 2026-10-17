@@ -89,6 +89,16 @@ class UpdateSubmissionRequest(BaseModel):
     status: Optional[str] = "evaluated"
 
 
+class SubmitToUtRequest(BaseModel):
+    student_nim: str
+    course_id: str
+    session_num: int
+    score: int
+    feedback: str
+    student_name: Optional[str] = None
+    userid: Optional[str] = None
+
+
 class ScanRequest(BaseModel):
     session_num: Optional[int] = None
     course_id: Optional[str] = None
@@ -206,6 +216,27 @@ def update_submission(
         "status": "success",
         "message": "Submission berhasil diperbarui",
     }
+
+
+@app.post("/api/submissions/submit-to-ut")
+async def submit_to_ut(
+    payload: SubmitToUtRequest,
+    db: Database = Depends(get_database),
+) -> Dict[str, Any]:
+    """Mengirim nilai dan feedback mahasiswa langsung ke elearning.ut.ac.id (1-klik per feedback)."""
+    from tuton.submitter import submit_single_grade_to_ut
+    res = await submit_single_grade_to_ut(
+        course_id=payload.course_id,
+        session_num=payload.session_num,
+        student_nim=payload.student_nim,
+        score=payload.score,
+        feedback=payload.feedback,
+        student_name=payload.student_name,
+        userid=payload.userid,
+    )
+    if not res.get("success"):
+        raise HTTPException(status_code=400, detail=res.get("message", "Gagal mengirim ke UT"))
+    return res
 
 
 @app.post("/api/scan")

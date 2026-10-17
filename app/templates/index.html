@@ -677,34 +677,71 @@
 
           <!-- Feedback Box (2 Paragraf Sesuai Standar Resmi UT) -->
           <div class="space-y-2">
-            <div class="flex items-center justify-between">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <span class="text-xs font-bold text-[#78350F] flex items-center gap-1.5">
                 <i data-lucide="message-square" class="w-4 h-4 text-[#D97706]"></i>
                 Draf Feedback Dosen (Standar 2 Paragraf UT):
               </span>
 
-              <!-- 1-Click Salin Feedback Button -->
-              <button
-                @click="copyFeedback(student)"
-                class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all shadow-xs flex items-center gap-1.5 active:scale-95"
-                :class="copiedFeedbacks[`${student.nim}_${student.current_session || 1}`] 
-                  ? 'bg-[#059669] text-white animate-copy-success' 
-                  : 'bg-gradient-to-r from-[#D97706] to-[#F59E0B] text-white hover:from-[#B45309] hover:to-[#D97706]'"
-                :title="`Salin seluruh teks feedback mahasiswa ${student.name} ke papan klip`"
-              >
-                <template x-if="copiedFeedbacks[`${student.nim}_${student.current_session || 1}`]">
-                  <span class="flex items-center gap-1">
-                    <i data-lucide="check" class="w-4 h-4"></i>
-                    <span>Tersalin! ✓</span>
-                  </span>
-                </template>
-                <template x-if="!copiedFeedbacks[`${student.nim}_${student.current_session || 1}`]">
-                  <span class="flex items-center gap-1">
-                    <i data-lucide="clipboard" class="w-4 h-4"></i>
-                    <span>Salin Feedback</span>
-                  </span>
-                </template>
-              </button>
+              <div class="flex items-center gap-2 self-end sm:self-auto">
+                <!-- Tombol Kirim ke UT (Single-flight per feedback) -->
+                <button
+                  @click="submitToUt(student)"
+                  :disabled="submittingUt[`${student.nim}_${student.current_session || selectedSession || 1}`] || submittedUt[`${student.nim}_${student.current_session || selectedSession || 1}`] || (['completed', 'evaluated', 'copied', 'graded'].includes(student.status) && student.is_copied === 1)"
+                  class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all shadow-xs flex items-center gap-1.5 active:scale-95"
+                  :class="{
+                    'bg-[#059669] text-white cursor-not-allowed opacity-90': submittedUt[`${student.nim}_${student.current_session || selectedSession || 1}`] || (['completed', 'evaluated', 'copied', 'graded'].includes(student.status) && student.is_copied === 1),
+                    'bg-amber-600 text-white animate-pulse cursor-wait': submittingUt[`${student.nim}_${student.current_session || selectedSession || 1}`],
+                    'bg-[#0284C7] hover:bg-[#0369A1] text-white': !submittingUt[`${student.nim}_${student.current_session || selectedSession || 1}`] && !submittedUt[`${student.nim}_${student.current_session || selectedSession || 1}`] && !(['completed', 'evaluated', 'copied', 'graded'].includes(student.status) && student.is_copied === 1)
+                  }"
+                  :title="`Kirim nilai (${student.current_score || student.suggested_score || 85}) dan feedback ${student.name} langsung ke website UT`"
+                >
+                  <template x-if="submittingUt[`${student.nim}_${student.current_session || selectedSession || 1}`]">
+                    <span class="flex items-center gap-1.5">
+                      <svg class="animate-spin h-3.5 w-3.5 text-white" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                      </svg>
+                      <span>Mengirim...</span>
+                    </span>
+                  </template>
+                  <template x-if="submittedUt[`${student.nim}_${student.current_session || selectedSession || 1}`] || (['completed', 'evaluated', 'copied', 'graded'].includes(student.status) && student.is_copied === 1)">
+                    <span class="flex items-center gap-1">
+                      <i data-lucide="check-check" class="w-3.5 h-3.5"></i>
+                      <span>Terkirim ke UT ✓</span>
+                    </span>
+                  </template>
+                  <template x-if="!submittingUt[`${student.nim}_${student.current_session || selectedSession || 1}`] && !submittedUt[`${student.nim}_${student.current_session || selectedSession || 1}`] && !(['completed', 'evaluated', 'copied', 'graded'].includes(student.status) && student.is_copied === 1)">
+                    <span class="flex items-center gap-1">
+                      <i data-lucide="send" class="w-3.5 h-3.5"></i>
+                      <span>Kirim ke UT</span>
+                    </span>
+                  </template>
+                </button>
+
+                <!-- 1-Click Salin Feedback Button -->
+                <button
+                  @click="copyFeedback(student)"
+                  class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all shadow-xs flex items-center gap-1.5 active:scale-95"
+                  :class="copiedFeedbacks[`${student.nim}_${student.current_session || 1}`] 
+                    ? 'bg-[#059669] text-white animate-copy-success' 
+                    : 'bg-gradient-to-r from-[#D97706] to-[#F59E0B] text-white hover:from-[#B45309] hover:to-[#D97706]'"
+                  :title="`Salin seluruh teks feedback mahasiswa ${student.name} ke papan klip`"
+                >
+                  <template x-if="copiedFeedbacks[`${student.nim}_${student.current_session || 1}`]">
+                    <span class="flex items-center gap-1">
+                      <i data-lucide="check" class="w-4 h-4"></i>
+                      <span>Tersalin! ✓</span>
+                    </span>
+                  </template>
+                  <template x-if="!copiedFeedbacks[`${student.nim}_${student.current_session || 1}`]">
+                    <span class="flex items-center gap-1">
+                      <i data-lucide="clipboard" class="w-4 h-4"></i>
+                      <span>Salin Feedback</span>
+                    </span>
+                  </template>
+                </button>
+              </div>
             </div>
 
             <!-- Feedback Text Container (High Contrast, Ergonomic) -->

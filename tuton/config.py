@@ -14,6 +14,7 @@ UT_PASSWORD = os.getenv("UT_PASSWORD", "")
 
 TUTOR_NAME = "AINUR ROSYIDAH AZMIE PUTRY"
 TUTOR_ID = "01007726"
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
 
 # Database Configuration (Mendukung SQLite lokal dan MySQL server)
 DB_ENGINE = os.getenv("DB_ENGINE", "sqlite").lower()

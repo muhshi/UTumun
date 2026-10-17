@@ -187,26 +187,50 @@ def evaluate_submission(student_name: str, content: str, session_num: int) -> Di
         has_peribahasa = "peribahasa" in c_lower
         has_bmp = "mkwn4108" in c_lower or "bmp" in c_lower or "modul" in c_lower
 
-        score = 88
+        # Ekstrak judul yang ditulis mahasiswa jika ada
+        extracted_title = ""
+        title_match = re.search(r'(?:judul\s*(?:artikel)?\s*[:\-=]\s*["\']?([^"\n\r]{10,90})["\']?)', content, re.IGNORECASE)
+        if title_match:
+            extracted_title = title_match.group(1).strip()
+
+        # Ekstrak peribahasa yang ditulis mahasiswa jika ada
+        extracted_peribahasa = ""
+        p_match = re.search(r'(?:peribahasa\s*[:\-=]\s*["\']?([^"\n\r]{6,80})["\']?)', content, re.IGNORECASE)
+        if p_match:
+            extracted_peribahasa = p_match.group(1).strip()
+
+        score = 86
         if has_kutipan: score += 2
         if has_dapus: score += 2
-        if has_bahasa_daerah: score += 1
-        if has_peribahasa: score += 1
+        if has_bahasa_daerah: score += 2
+        if has_peribahasa: score += 2
         if has_bmp: score += 1
+        if extracted_title: score += 1
 
-        score = min(max(score, 88), 95)
+        score = min(max(score, 85), 95)
+
+        title_desc = f'berjudul "{extracted_title}"' if extracted_title else "yang selaras dengan tema pelestarian kebudayaan"
+        p_desc = f'peribahasa "{extracted_peribahasa}" beserta maknanya' if extracted_peribahasa else "contoh peribahasa dan maknanya secara lugas"
 
         p1 = (
-            f"Halo {name}, terima kasih atas pengunggahan Tugas 2 yang telah Saudara kerjakan dengan sangat baik, rapi, dan terstruktur. "
-            f"Keunggulan jawaban Saudara tampak pada ketepatan merumuskan judul artikel yang representatif, kecermatan menandai serta "
-            f"memperbaiki tata cara penulisan kutipan ilmiah (seperti kutipan KBBI, Yudhistira dkk. 2022, serta sumber daring), "
-            f"sekaligus kemampuan menguraikan kondisi kekayaan 718 bahasa daerah Indonesia dan contoh peribahasa secara bernas."
+            f"Halo {name}, terima kasih atas pengunggahan Tugas 2 mata kuliah Bahasa Indonesia. "
+            f"Secara umum, pengerjaan tugas Saudara sudah sangat baik dengan perumusan judul artikel {title_desc}. "
+            f"Saudara juga telah menyajikan ulasan mengenai 718 bahasa daerah di Indonesia serta menguraikan {p_desc} dengan tepat."
         )
 
+        catatan = []
+        if not has_dapus:
+            catatan.append("menyusun empat entri daftar pustaka sesuai kutipan artikel dengan format standar APA")
+        if not has_kutipan:
+            catatan.append("memperjelas penandaan empat kutipan dan kaidah perbaikannya sesuai PUEBI/EYD")
+        if not has_bmp:
+            catatan.append("memperkaya rujukan resmi Buku Materi Pokok (BMP MKWN4108) Modul 5 dan 6 UT")
+
+        saran_str = " serta ".join(catatan) if catatan else "memperhatikan konsistensi tanda baca dan huruf miring pada penulisan daftar pustaka"
+
         p2 = (
-            f"Sebagai catatan penyempurnaan ke depan, Saudara dapat lebih mencermati konsistensi tanda baca, penulisan huruf miring "
-            f"pada judul sumber di bagian daftar pustaka, serta menambahkan rujukan Buku Materi Pokok (BMP MKWN4108) UT agar "
-            f"landasan teori karya ilmiah semakin kokoh. Pertahankan ketelitian dan semangat belajar ini pada sesi-sesi selanjutnya!"
+            f"Sebagai catatan penyempurnaan ke depan, Saudara disarankan untuk {saran_str}. "
+            f"Pertahankan ketelitian, penalaran ilmiah, dan semangat belajar ini pada sesi-sesi selanjutnya!"
         )
 
     return {

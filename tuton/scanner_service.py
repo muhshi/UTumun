@@ -7,6 +7,7 @@ from tuton.auth import ensure_authenticated_page
 from tuton.config import CHROME_PATH, COURSES, SESSION_FILE
 from tuton.db import Database, get_db
 from tuton.evaluator import evaluate_submission
+from tuton.gemini_evaluator import evaluate_with_gemini
 from tuton.matcher import match_feedbacks_to_students
 from tuton.scraper import (
     parse_post_author_and_nim,
@@ -172,18 +173,22 @@ class ScannerService:
                                         # Mahasiswa SUDAH dinilai di web e-learning UT
                                         real_score = int(scraped_score) if float(scraped_score).is_integer() else scraped_score
                                         final_fb = scraped_fb
+                                        final_fb = scraped_fb
                                         if not final_fb and existing_sub and existing_sub.get("feedback"):
-                                            final_fb = existing_sub["feedback"]
+                                            is_dup = "keunggulan jawaban saudara tampak pada ketepatan merumuskan judul" in existing_sub["feedback"].lower()
+                                            if not is_dup:
+                                                final_fb = existing_sub["feedback"]
                                         if not final_fb:
-                                            eval_res = evaluate_submission(author_name, s.get("fileText", ""), s_num)
+                                            eval_fn = evaluate_with_gemini if s_num == 5 else evaluate_submission
+                                            eval_res = eval_fn(author_name, s.get("content") or s.get("fileText", ""), s_num)
                                             final_fb = eval_res.get("feedback")
 
                                         self.db.upsert_submission(
                                             student_nim=student_nim,
                                             course_id=cid,
                                             session_num=s_num,
-                                            post_id=s.get("id"),
-                                            content=s.get("fileText", ""),
+                                            post_id=s.get("postId") or s.get("userId") or s.get("id"),
+                                            content=s.get("content") or s.get("fileText", ""),
                                             score=real_score,
                                             original_score=real_score,
                                             feedback=final_fb,
@@ -193,14 +198,17 @@ class ScannerService:
                                         )
                                     else:
                                         # Mahasiswa sudah kumpul tugas tetapi BELUM dinilai di web UT
-                                        if existing_sub and existing_sub.get("score") is not None and existing_sub.get("feedback") and existing_sub.get("status") in ["pending", "draft"] and existing_sub["score"] >= 88:
+                                        is_dup = existing_sub and "keunggulan jawaban saudara tampak pada ketepatan merumuskan judul" in (existing_sub.get("feedback") or "").lower()
+                                        if existing_sub and existing_sub.get("score") is not None and existing_sub.get("feedback") and existing_sub.get("status") in ["pending", "draft"] and existing_sub["score"] >= 88 and not is_dup:
                                             draft_score = existing_sub["score"]
                                             draft_fb = existing_sub["feedback"]
                                         else:
-                                            eval_res = evaluate_submission(author_name, s.get("fileText", ""), s_num)
-                                            draft_score = eval_res.get("score") or 90
+                                            eval_fn = evaluate_with_gemini if s_num == 5 else evaluate_submission
                                             traj = self.db.get_student_trajectory(student_nim, cid)
                                             prev_scores = [t["score"] for t in traj if t["session"] < s_num and t.get("score") is not None]
+                                            prev_s = prev_scores[-1] if prev_scores else None
+                                            eval_res = eval_fn(author_name, s.get("content") or s.get("fileText", ""), s_num, previous_score=prev_s) if eval_fn == evaluate_with_gemini else eval_fn(author_name, s.get("content") or s.get("fileText", ""), s_num)
+                                            draft_score = eval_res.get("score") or 90
                                             if prev_scores:
                                                 draft_score = min(max(draft_score, prev_scores[-1] + 1), 95)
                                             draft_fb = scraped_fb or eval_res.get("feedback")
@@ -209,8 +217,8 @@ class ScannerService:
                                             student_nim=student_nim,
                                             course_id=cid,
                                             session_num=s_num,
-                                            post_id=s.get("id"),
-                                            content=s.get("fileText", ""),
+                                            post_id=s.get("postId") or s.get("userId") or s.get("id"),
+                                            content=s.get("content") or s.get("fileText", ""),
                                             score=draft_score,
                                             original_score=draft_score,
                                             feedback=draft_fb,
