@@ -5,6 +5,35 @@ def clean_title_name(name: str) -> str:
     words = name.strip().split()
     return " ".join(w.capitalize() for w in words)
 
+
+def clean_unwanted_signatures(feedback: str) -> str:
+    """
+    Membersihkan baris tanda tangan atau salam penutup seperti:
+    - Salam, / Salam sukses, / Salam hangat,
+    - Asisten Penilai ... / Asisten Dosen ... / Asisten Ainur ...
+    - Nama tutor / dosen di baris terpisah di akhir feedback.
+    Menjaga agar feedback murni tepat 2 paragraf tanpa tanda tangan.
+    """
+    if not feedback:
+        return ""
+    lines = feedback.strip().splitlines()
+    while lines:
+        last = lines[-1].strip()
+        if not last:
+            lines.pop()
+            continue
+        # Cek jika baris terakhir memuat kata kunci asisten/ainur/dosen penilai/tutor pengampu
+        if re.search(r'\b(asisten|ainur|dosen penilai|tutor pengampu)\b', last, flags=re.IGNORECASE):
+            lines.pop()
+            continue
+        # Cek jika baris terakhir adalah salam penutup pendek (maksimal 4 kata)
+        if re.match(r'^(salam\b|hormat\b|wassalam\b|tutor\b|dosen\b)', last, flags=re.IGNORECASE) and len(last.split()) <= 4:
+            lines.pop()
+            continue
+        break
+    return "\n".join(lines).strip()
+
+
 def evaluate_submission(student_name: str, content: str, session_num: int) -> Dict[str, Any]:
     """
     Mengevaluasi tanggapan mahasiswa berdasarkan rubrik resmi UT
@@ -236,5 +265,5 @@ def evaluate_submission(student_name: str, content: str, session_num: int) -> Di
     return {
         "name": name,
         "score": score,
-        "feedback": f"{p1}\n\n{p2}"
+        "feedback": clean_unwanted_signatures(f"{p1}\n\n{p2}")
     }

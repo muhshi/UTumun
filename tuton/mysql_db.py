@@ -236,6 +236,10 @@ class MySQLDatabase:
         if updated_at is None:
             updated_at = datetime.now().isoformat()
 
+        if feedback is not None:
+            from tuton.evaluator import clean_unwanted_signatures
+            feedback = clean_unwanted_signatures(feedback)
+
         with self.get_connection() as conn:
             with conn.cursor() as cursor:
                 cursor.execute("""
@@ -271,6 +275,25 @@ class MySQLDatabase:
 
     # Alias kompatibilitas
     update_submission = upsert_submission
+
+    def clean_all_stored_signatures(self) -> int:
+        """Membersihkan seluruh signature/salam asisten yang tidak diinginkan dari feedback di database MySQL."""
+        from tuton.evaluator import clean_unwanted_signatures
+        count = 0
+        with self.get_connection() as conn:
+            with conn.cursor() as cursor:
+                cursor.execute("SELECT student_nim, course_id, session_num, feedback FROM submissions WHERE feedback IS NOT NULL")
+                rows = cursor.fetchall()
+                for r in rows:
+                    orig_fb = r["feedback"]
+                    cleaned_fb = clean_unwanted_signatures(orig_fb)
+                    if cleaned_fb != orig_fb:
+                        cursor.execute(
+                            "UPDATE submissions SET feedback = %s WHERE student_nim = %s AND course_id = %s AND session_num = %s",
+                            (cleaned_fb, r["student_nim"], r["course_id"], r["session_num"])
+                        )
+                        count += 1
+        return count
 
     def get_submission(
         self, student_nim: str, course_id: str, session_num: int

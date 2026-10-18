@@ -109,6 +109,31 @@ def test_student_and_submission_upsert(test_db):
     assert subs[0]["is_grade_copied"] == 1
     assert subs[0]["status"] == "completed"
 
+    # Test that upsert_submission automatically strips unwanted signatures
+    test_db.upsert_submission(
+        student_nim="041234567",
+        course_id="413073",
+        session_num=1,
+        score=94,
+        feedback="Halo Ahmad, p1.\n\nMasukan p2.\n\nSalam sukses,\nAsisten Penilai Ibu Ainur Rosyidah",
+        status="completed"
+    )
+    subs = test_db.get_submissions(course_id="413073", session_num=1)
+    assert "Asisten" not in subs[0]["feedback"]
+    assert "Ainur" not in subs[0]["feedback"]
+    assert subs[0]["feedback"] == "Halo Ahmad, p1.\n\nMasukan p2."
+
+    # Test clean_all_stored_signatures on raw dirty rows
+    with test_db.get_connection() as conn:
+        conn.execute(
+            "UPDATE submissions SET feedback = ? WHERE student_nim = ?",
+            ("Halo Ahmad, p1.\n\nMasukan p2.\n\nSalam,\nAsisten Dosen Penilai", "041234567")
+        )
+    cleaned_count = test_db.clean_all_stored_signatures()
+    assert cleaned_count == 1
+    subs = test_db.get_submissions(course_id="413073", session_num=1)
+    assert subs[0]["feedback"] == "Halo Ahmad, p1.\n\nMasukan p2."
+
 
 def test_students_with_trajectory_and_lower_score_warning(test_db):
     """Test trajectory calculation, lower score warning, and auto-suggested grade."""

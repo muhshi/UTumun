@@ -42,6 +42,23 @@ app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
 
 
+@app.on_event("startup")
+def on_startup():
+    """Jalankan inisialisasi awal dan pembersihan otomatis feedback signature."""
+    try:
+        db = get_database()
+        if hasattr(db, "clean_all_stored_signatures"):
+            cleaned = db.clean_all_stored_signatures()
+            if isinstance(cleaned, int) and cleaned > 0:
+                import logging
+                logging.getLogger("tuton.db").info(
+                    f"[✓] Berhasil merapikan {cleaned} feedback (menghapus salam/signature asisten yang tidak diinginkan)."
+                )
+    except Exception as e:
+        import logging
+        logging.getLogger("tuton.db").warning(f"Peringatan saat startup signature cleanup: {e}")
+
+
 # Dependency Injections
 def get_database() -> Database:
     """Dependency provider untuk instance database dengan graceful fallback."""

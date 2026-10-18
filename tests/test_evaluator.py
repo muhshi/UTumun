@@ -75,3 +75,41 @@ def test_evaluate_submission_sesi5():
     assert "Tugas 2" in paragraphs[0]
 
 
+def test_clean_unwanted_signatures():
+    from tuton.evaluator import clean_unwanted_signatures
+
+    raw_fb_1 = (
+        "Halo Fikri Wahyudin, terima kasih atas pengunggahan Tugas 2.\n\n"
+        "Meskipun secara keseluruhan tugas Anda sudah memuaskan, perbaiki daftar pustaka. Tetap semangat!\n\n"
+        "Salam sukses,\n"
+        "Asisten Penilai Ibu Ainur Rosyidah Azmie Putry"
+    )
+    cleaned_1 = clean_unwanted_signatures(raw_fb_1)
+    assert "Asisten" not in cleaned_1
+    assert "Ainur" not in cleaned_1
+    assert "Salam sukses" not in cleaned_1
+    assert cleaned_1 == (
+        "Halo Fikri Wahyudin, terima kasih atas pengunggahan Tugas 2.\n\n"
+        "Meskipun secara keseluruhan tugas Anda sudah memuaskan, perbaiki daftar pustaka. Tetap semangat!"
+    )
+
+    raw_fb_2 = (
+        "Halo Parlaungan, terima kasih atas tanggapan Anda.\n\n"
+        "Perhatikan kaidah kutipan. Terus pertahankan semangat belajar!\n\n"
+        "Salam,\n"
+        "Asisten Dosen Penilai MKWN4108 Bahasa Indonesia"
+    )
+    cleaned_2 = clean_unwanted_signatures(raw_fb_2)
+    assert "Asisten" not in cleaned_2
+    assert "Dosen Penilai" not in cleaned_2
+    assert cleaned_2 == (
+        "Halo Parlaungan, terima kasih atas tanggapan Anda.\n\n"
+        "Perhatikan kaidah kutipan. Terus pertahankan semangat belajar!"
+    )
+
+    # Clean text without signatures remains untouched
+    raw_fb_3 = "Halo Mahasiswa, p1.\n\nIni masukan p2. Semangat selalu!"
+    assert clean_unwanted_signatures(raw_fb_3) == raw_fb_3
+
+
+

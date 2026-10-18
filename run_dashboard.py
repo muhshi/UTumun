@@ -28,6 +28,14 @@ def ensure_database_populated(db: Database) -> None:
         summary = seed_from_markdown_reports(db)
         print(f"[✓] Data awal berhasil dimuat: {summary['total_students']} mahasiswa, {summary['total_submissions']} submission.")
 
+    if hasattr(db, "clean_all_stored_signatures"):
+        try:
+            cleaned = db.clean_all_stored_signatures()
+            if isinstance(cleaned, int) and cleaned > 0:
+                print(f"[✓] Berhasil merapikan {cleaned} feedback (menghapus salam/signature asisten yang tidak diinginkan).")
+        except Exception:
+            pass
+
 
 def build_parser() -> argparse.ArgumentParser:
     """Membangun argument parser untuk CLI dashboard."""

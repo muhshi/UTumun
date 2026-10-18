@@ -11,7 +11,11 @@ from typing import Dict, Any, Optional
 import httpx
 
 from tuton.config import GEMINI_API_KEY
-from tuton.evaluator import evaluate_submission as fallback_evaluate_submission, clean_title_name
+from tuton.evaluator import (
+    evaluate_submission as fallback_evaluate_submission,
+    clean_title_name,
+    clean_unwanted_signatures,
+)
 
 logger = logging.getLogger("tuton.gemini_evaluator")
 
@@ -28,7 +32,7 @@ Total Skor Maksimal: 100 poin. Rentang nilai wajar tugas mahasiswa aktif: 85 - 9
 """
 
 SYSTEM_PROMPT_TEMPLATE = """
-Anda adalah asisten dosen penilai resmi untuk Ibu Ainur Rosyidah Azmie Putry, S.Pd., M.Pd. pada mata kuliah MKWN4108 - Bahasa Indonesia di Universitas Terbuka (UT).
+Anda adalah dosen/tutor resmi mata kuliah MKWN4108 - Bahasa Indonesia di Universitas Terbuka (UT).
 
 Tugas Anda:
 Evaluasi lembar jawaban Tugas 2 mahasiswa secara teliti dan objektif berdasarkan Rubrik Penskoran Resmi UT.
@@ -43,9 +47,12 @@ STANDAR FORMAT FEEDBACK (WAJIB DIPATUHI SECARA KETAT):
    - Sebutkan secara SPESIFIK apa yang bagus dari jawaban mahasiswa tersebut (misal: judul yang dirumuskan, kutipan yang berhasil ditemukan, contoh peribahasa yang dipilih beserta artinya, atau ketepatan data 718 bahasa daerah).
 3. PARAGRAF 2 (Kekurangan Spesifik & Saran Perbaikan):
    - Ulas bagian mana dari tugasnya yang masih kurang lengkap atau belum tepat (misal: format daftar pustaka APA yang belum konsisten tanda baca/huruf miringnya, perbaikan kutipan langsung/tidak langsung yang belum tuntas, atau perlunya memperkaya rujukan BMP MKWN4108 Modul 5/6).
-   - Ditutup dengan kalimat pemacu semangat belajar untuk sesi-sesi selanjutnya.
-4. Gaya Bahasa: Akademis, santun, objektif, edukatif, dan alami khas dosen/tutor UT (hindari bahasa klise AI yang kaku).
-5. Tentukan nilai numerik bulat (integer) antara 85 s.d. 95 yang proporsional dengan kelengkapan jawabannya.
+   - Ditutup langsung dengan kalimat pemacu semangat belajar untuk sesi-sesi selanjutnya.
+4. ATURAN BEBAS SALAM/TANDA TANGAN (SANGAT PENTING):
+   - DILARANG KERAS menyertakan salam penutup atau baris tanda tangan terpisah di akhir paragraf 2 (seperti "Salam sukses,", "Salam hangat,", "Asisten...", "Tutor...", atau nama dosen/asisten).
+   - Feedback HARUS murni berakhir pada kalimat penutup pemacu semangat belajar di paragraf 2 tanpa baris tambahan apapun.
+5. Gaya Bahasa: Akademis, santun, objektif, edukatif, dan alami khas dosen/tutor UT (hindari bahasa klise AI yang kaku).
+6. Tentukan nilai numerik bulat (integer) antara 85 s.d. 95 yang proporsional dengan kelengkapan jawabannya.
 
 Format Output WAJIB JSON:
 {{
@@ -149,6 +156,8 @@ Evaluasilah lembar jawaban di atas dan kembalikan JSON persis sesuai format yang
                     f"Sebagai catatan perbaikan, Saudara disarankan untuk lebih menyempurnakan kaidah penulisan kutipan, "
                     f"format daftar pustaka sesuai gaya APA, dan memperkuat rujukan resmi BMP MKWN4108. Tetap semangat!"
                 )
+            else:
+                feedback = clean_unwanted_signatures(feedback)
 
             return {
                 "name": clean_name,
