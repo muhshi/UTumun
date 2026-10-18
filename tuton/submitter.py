@@ -66,6 +66,14 @@ async def submit_single_grade_to_ut(
                 userid = existing["post_id"]
 
         is_assignment = session_num in [3, 5, 7]
+        if is_assignment:
+            cmid = get_assign_cmid(course_id, session_num)
+            if not cmid:
+                return {"success": False, "message": f"CMID tugas tidak ditemukan untuk kelas {course_id} sesi {session_num}"}
+        else:
+            cmid = get_forum_cmid(course_id, session_num)
+            if not cmid:
+                return {"success": False, "message": f"CMID forum diskusi tidak ditemukan untuk kelas {course_id} sesi {session_num}"}
 
         launch_kwargs = {
             "headless": True,
@@ -222,17 +230,13 @@ async def submit_single_grade_to_ut(
 
                 else:
                     # Sesi Diskusi Forum (Sesi 1, 2, 4, 6, 8)
-                    cmid = get_forum_cmid(course_id, session_num)
-                    if not cmid:
-                        return {"success": False, "message": f"CMID forum diskusi tidak ditemukan untuk kelas {course_id} sesi {session_num}"}
-
                     forum_url = f"https://elearning.ut.ac.id/mod/forum/view.php?id={cmid}"
                     await page.goto(forum_url, wait_until="domcontentloaded", timeout=30000)
                     await page.wait_for_timeout(1500)
 
-                    # Dapatkan link topik diskusi
+                    # Dapatkan link topik diskusi pertama
                     topic_href = await page.evaluate('''() => {
-                        const a = document.querySelector(".discussionname a, .topic a");
+                        const a = document.querySelector(".discussionname a, .topic a, a[href*='/mod/forum/discuss.php?d=']");
                         return a ? a.href : null;
                     }''')
                     if not topic_href:
@@ -242,29 +246,170 @@ async def submit_single_grade_to_ut(
                     await page.goto(discuss_url, wait_until="domcontentloaded", timeout=30000)
                     await page.wait_for_timeout(1500)
 
-                    # Cari postingan mahasiswa dan atur nilai pada dropdown rating
-                    rated = await page.evaluate('''({nim, targetScore}) => {
+                    # Cari postingan mahasiswa, atur rating nilai, dan periksa balasan tutor
+                    forum_action = await page.evaluate('''({nim, studentName, targetScore}) => {
                         const articles = Array.from(document.querySelectorAll("article.forum-post-container, div.forumpost"));
+                        let studentPost = null;
+                        let postId = null;
+                        let rated = false;
+                        let replyHref = null;
+
                         for (const art of articles) {
-                            const text = art.innerText;
-                            if (text.includes(nim)) {
-                                const rateSelect = art.querySelector("select[name*='rating']");
-                                if (rateSelect) {
-                                    rateSelect.value = String(targetScore);
-                                    rateSelect.dispatchEvent(new Event('change', { bubbles: true }));
-                                    return true;
-                                }
+                            const text = art.innerText.toLowerCase();
+                            const header = art.querySelector("header") ? art.querySelector("header").innerText.toLowerCase() : "";
+                            const isMatch = (nim && (text.includes(nim.toLowerCase()) || header.includes(nim.toLowerCase()))) ||
+                                            (studentName && (header.includes(studentName.toLowerCase()) || text.includes(studentName.toLowerCase())));
+                            const isTutor = header.includes("ainur") || header.includes("01007726");
+
+                            if (isMatch && !isTutor) {
+                                studentPost = art;
+                                postId = art.getAttribute("data-post-id");
+                                break;
                             }
                         }
-                        return false;
-                    }''', {"nim": student_nim, "targetScore": score})
 
-                    if not rated:
+                        if (!studentPost) {
+                            return { success: false, message: `Postingan forum untuk mahasiswa ${nim || studentName} tidak ditemukan` };
+                        }
+
+                        // Rating nilai pada postingan mahasiswa
+                        const rateSelect = studentPost.querySelector(`select#menurating${postId}`) || studentPost.querySelector("select[name*='rating']");
+                        if (rateSelect) {
+                            rateSelect.value = String(targetScore);
+                            rateSelect.dispatchEvent(new Event('change', { bubbles: true }));
+                            rated = true;
+                        }
+
+                        // Cek apakah tutor sudah pernah membalas postingan ini untuk mencegah spam
+                        const tutorPosts = articles.filter(art => {
+                            const header = art.querySelector("header") ? art.querySelector("header").innerText.toLowerCase() : "";
+                            const text = art.innerText.toLowerCase();
+                            return header.includes("ainur") || header.includes("01007726") || text.includes("01007726");
+                        });
+
+                        const alreadyReplied = tutorPosts.some(art => {
+                            const text = art.innerText.toLowerCase();
+                            return (nim && text.includes(nim.toLowerCase())) || (studentName && text.includes(studentName.toLowerCase()));
+                        });
+
+                        const replyLink = studentPost.querySelector("a[href*='post.php?reply='], a[data-action='reply']");
+                        if (replyLink) {
+                            replyHref = replyLink.href;
+                        }
+
+                        return {
+                            success: true,
+                            postId: postId,
+                            rated: rated,
+                            alreadyReplied: alreadyReplied,
+                            replyHref: replyHref
+                        };
+                    }''', {"nim": student_nim, "studentName": student_name, "targetScore": score})
+
+                    if not isinstance(forum_action, dict) or forum_action.get("success") is False:
                         return {
                             "success": False,
-                            "message": f"Tidak dapat menemukan opsi rating penilaian untuk postingan mahasiswa {student_nim}"
+                            "message": (forum_action.get("message") if isinstance(forum_action, dict) else None) or f"Gagal memproses postingan forum untuk mahasiswa {student_nim}"
                         }
-                    await page.wait_for_timeout(2000)
+
+                    if not forum_action.get("rated"):
+                        logger.warning(f"Opsi dropdown rating tidak ditemukan untuk NIM {student_nim}")
+
+                    # Tunggu hingga permintaan AJAX rating Moodle tersimpan
+                    await page.wait_for_timeout(2500)
+
+                    # Jika belum dibalas dan tautan reply tersedia, kirim draf feedback sebagai balasan forum
+                    already_replied = forum_action.get("alreadyReplied") or forum_action.get("already_replied")
+                    reply_url = forum_action.get("replyHref") or forum_action.get("reply_href")
+
+                    if already_replied:
+                        logger.info(f"Tutor sudah pernah membalas postingan mahasiswa {student_nim}. Melewati pengiriman balasan forum.")
+                    elif reply_url and feedback:
+                        logger.info(f"Membuka halaman balasan forum untuk {student_nim}: {reply_url}")
+                        await page.goto(reply_url, wait_until="domcontentloaded", timeout=30000)
+                        await page.wait_for_timeout(1500)
+
+                        # Injeksi draf feedback ke editor Moodle (Atto / TinyMCE / Textarea)
+                        feedback_injected = await page.evaluate('''({rawFeedback}) => {
+                            let applied = false;
+                            const paragraphs = rawFeedback.split("\\n\\n").filter(p => p.trim());
+                            const htmlFeedback = paragraphs.map(p => `<p>${p.trim()}</p>`).join("");
+
+                            // 1. Editor Atto Moodle
+                            const attoEditors = document.querySelectorAll(
+                                "div.editor_atto_content, div#id_message_editor[contenteditable='true'], div[role='textbox']"
+                            );
+                            for (const ed of attoEditors) {
+                                ed.innerHTML = htmlFeedback;
+                                ed.dispatchEvent(new Event("input", { bubbles: true }));
+                                ed.dispatchEvent(new Event("change", { bubbles: true }));
+                                applied = true;
+                            }
+
+                            // 2. Editor TinyMCE via iframe
+                            const tinyIframes = document.querySelectorAll("div.tox-edit-area__iframe, iframe[id*='message']");
+                            for (const ifr of tinyIframes) {
+                                try {
+                                    const doc = ifr.contentDocument || ifr.contentWindow.document;
+                                    if (doc && doc.body) {
+                                        doc.body.innerHTML = htmlFeedback;
+                                        applied = true;
+                                    }
+                                } catch(e) {}
+                            }
+
+                            // 3. Fallback ke Textarea Moodle
+                            const textareas = document.querySelectorAll(
+                                "textarea#id_message, textarea[name='message[text]'], textarea[name='message']"
+                            );
+                            for (const ta of textareas) {
+                                ta.value = htmlFeedback;
+                                ta.dispatchEvent(new Event("input", { bubbles: true }));
+                                ta.dispatchEvent(new Event("change", { bubbles: true }));
+                                applied = true;
+                            }
+
+                            // 4. Sinkronisasi via API TinyMCE jika tersedia
+                            if (window.tinyMCE) {
+                                try {
+                                    for (const editor of Object.values(window.tinyMCE.editors || {})) {
+                                        if (editor.id && editor.id.includes("message")) {
+                                            editor.setContent(htmlFeedback);
+                                            applied = true;
+                                        }
+                                    }
+                                } catch(e) {}
+                            }
+
+                            return applied;
+                        }''', {"rawFeedback": feedback})
+
+                        if not feedback_injected:
+                            logger.warning(f"Editor balasan forum Moodle tidak terdeteksi via selector standar untuk {student_nim}")
+
+                        # Klik tombol Kirim ke forum (Post to forum)
+                        post_clicked = await page.evaluate('''() => {
+                            const btn = document.querySelector(
+                                "input#id_submitbutton, button#id_submitbutton, input[name='submitbutton'], button[type='submit'][name='submitbutton']"
+                            ) || Array.from(document.querySelectorAll("input[type='submit'], button[type='submit']")).find(
+                                el => (el.value || el.innerText || "").toLowerCase().includes("forum") ||
+                                      (el.value || el.innerText || "").toLowerCase().includes("kirim") ||
+                                      (el.value || el.innerText || "").toLowerCase().includes("post")
+                            );
+                            if (btn) {
+                                btn.click();
+                                return true;
+                            }
+                            return false;
+                        }''')
+
+                        if not post_clicked:
+                            post_btn = page.locator("input#id_submitbutton, button#id_submitbutton, button:has-text('Kirim ke forum'), button:has-text('Post to forum')").first
+                            if await post_btn.count() > 0:
+                                await post_btn.click()
+
+                        await page.wait_for_timeout(3000)
+                        logger.info(f"Balasan feedback forum berhasil dikirim untuk {student_nim}")
 
                 # Update database aktif (SQLite atau MySQL via get_db)
                 db.upsert_submission(

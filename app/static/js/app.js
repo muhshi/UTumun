@@ -398,8 +398,10 @@ document.addEventListener('alpine:init', () => {
 
       // Reaktif: perbarui referensi objek submittingUt
       this.submittingUt = { ...this.submittingUt, [key]: true };
-      this.showToast(`Mengirim nilai (${scoreVal}) & feedback untuk ${student.name} ke e-learning UT...`, "info");
-      console.log(`[UT_SUBMIT] Memulai pengiriman nilai & feedback untuk ${student.name} (${student.nim}) Sesi ${sNum}...`);
+      const isTugas = this.isSessionTugas ? this.isSessionTugas(sNum) : [3, 5, 7].includes(Number(sNum));
+      const targetLabel = isTugas ? `Tugas Sesi ${sNum}` : `Diskusi Forum Sesi ${sNum}`;
+      this.showToast(`Mengirim nilai (${scoreVal}) & feedback ${targetLabel} untuk ${student.name} ke e-learning UT...`, "info");
+      console.log(`[UT_SUBMIT] Memulai pengiriman nilai & feedback ${targetLabel} untuk ${student.name} (${student.nim})...`);
 
       const userIdVal = (student.submission && student.submission.post_id)
         ? student.submission.post_id
