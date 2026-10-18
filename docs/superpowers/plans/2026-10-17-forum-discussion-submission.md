@@ -22,7 +22,7 @@
 **Files:**
 - Create: `tests/test_forum_submitter.py`
 
-- [ ] **Step 1: Write the failing unit tests for forum submitter logic**
+- [x] **Step 1: Write the failing unit tests for forum submitter logic**
 
 ```python
 import pytest
@@ -93,7 +93,7 @@ async def test_submit_single_grade_to_ut_forum_mocked_success(monkeypatch):
     assert "berhasil" in res["message"].lower()
 ```
 
-- [ ] **Step 2: Run test to verify it fails initially**
+- [x] **Step 2: Run test to verify it fails initially**
 
 Run: `.venv/bin/pytest tests/test_forum_submitter.py -v`  
 Expected: FAIL or mismatch because forum reply logic is not yet implemented.
@@ -105,7 +105,7 @@ Expected: FAIL or mismatch because forum reply logic is not yet implemented.
 **Files:**
 - Modify: `tuton/submitter.py:223-270`
 
-- [ ] **Step 1: Implement robust forum post rating and reply mechanism**
+- [x] **Step 1: Implement robust forum post rating and reply mechanism**
 
 Update the `else:` branch in `tuton/submitter.py` for discussion sessions (Sesi 1, 2, 4, 6, 8):
 1. Buka halaman diskusi flat (`mode=1` untuk menampilkan seluruh pohon diskusi dalam satu halaman).
@@ -121,12 +121,12 @@ Update the `else:` branch in `tuton/submitter.py` for discussion sessions (Sesi 
      - Klik tombol "Kirim ke forum" / "Post to forum" (`button[id*='submit'], input[type='submit'][value*='forum']`).
      - Tunggu hingga balasan terunggah di utas.
 
-- [ ] **Step 2: Run tests to verify implementation passes**
+- [x] **Step 2: Run tests to verify implementation passes**
 
 Run: `.venv/bin/pytest tests/test_forum_submitter.py -v`  
 Expected: PASS
 
-- [ ] **Step 3: Commit Task 2**
+- [x] **Step 3: Commit Task 2**
 
 ```bash
 git add tuton/submitter.py tests/test_forum_submitter.py
@@ -141,18 +141,18 @@ git commit -m "feat(submitter): implementasi pengiriman rating dan balasan feedb
 - Modify: `app/static/js/app.js`
 - Test: Full pytest suite & Playwright browser test
 
-- [ ] **Step 1: Update UI notification messages in `app.js` to distinguish Tugas vs Diskusi**
+- [x] **Step 1: Update UI notification messages in `app.js` to distinguish Tugas vs Diskusi**
 
 In `app/static/js/app.js` method `submitToUt(student)`:
 - Jika `isSessionTugas(sNum)`: Tampilkan toast "Mengirim nilai & feedback Tugas Sesi X ke e-learning UT..."
 - Jika bukan Tugas: Tampilkan toast "Mengirim nilai rating & komentar balasan Diskusi Sesi X ke forum UT..."
 
-- [ ] **Step 2: Run full regression pytest suite**
+- [x] **Step 2: Run full regression pytest suite**
 
 Run: `.venv/bin/pytest -v`  
 Expected: 65+ passed, 0 failed.
 
-- [ ] **Step 3: Commit and push**
+- [x] **Step 3: Commit and push**
 
 ```bash
 git add app/static/js/app.js
