@@ -186,4 +186,20 @@ def test_root_template_submit_bindings(client):
     # Pastikan binding tombol submit menggunakan helper aman dan tidak menghasilkan disabled permanen
     assert "isSubmittingUt(student)" in html
     assert "isSubmittedUt(student)" in html
-    assert "app.js?v=2.3" in html
+    assert "app.js?v=2.4" in html
+
+
+def test_scan_multi_sessions_and_courses(client, test_db):
+    courses = test_db.get_courses()
+    cids = [c["id"] for c in courses[:2]]
+    scan_resp = client.post(
+        "/api/scan",
+        json={
+            "session_nums": [1, 2, 4],
+            "course_ids": cids,
+            "dry_run": True,
+        },
+    )
+    assert scan_resp.status_code == 200
+    data = scan_resp.json()
+    assert data.get("status") in ["started", "error"]

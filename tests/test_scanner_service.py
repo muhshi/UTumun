@@ -26,6 +26,8 @@ def test_scanner_service_get_status():
         "message": "Siap",
         "session_num": None,
         "course_id": None,
+        "session_nums": None,
+        "course_ids": None,
         "error": None,
     }
 
@@ -250,5 +252,30 @@ def test_scanner_service_uses_bundled_chromium_when_chrome_path_missing():
             assert "executable_path" not in launch_call_kwargs
             assert launch_call_kwargs.get("headless") is True
             assert "--no-sandbox" in launch_call_kwargs.get("args", [])
+
+    asyncio.run(_test())
+
+
+def test_scanner_service_multi_sessions_and_courses_dry_run():
+    async def _test():
+        db = Database(":memory:")
+        db.init_db()
+        service = ScannerService(db=db)
+
+        result = await service.start_scan(
+            session_nums=[1, 2, 5],
+            course_ids=["413073", "413077"],
+            dry_run=True,
+        )
+        assert result.get("status") == "started"
+
+        status = service.get_status()
+        assert status.get("session_nums") == [1, 2, 5]
+        assert status.get("course_ids") == ["413073", "413077"]
+
+        await service.task
+        assert service.is_running is False
+        assert service.progress == 100
+        assert "selesai" in service.message.lower()
 
     asyncio.run(_test())

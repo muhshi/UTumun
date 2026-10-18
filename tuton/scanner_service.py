@@ -26,6 +26,8 @@ class ScannerService:
         self.message: str = "Siap"
         self.session_num: Optional[int] = None
         self.course_id: Optional[str] = None
+        self.session_nums: Optional[List[int]] = None
+        self.course_ids: Optional[List[str]] = None
         self.error: Optional[str] = None
         self.task: Optional[asyncio.Task] = None
 
@@ -37,6 +39,8 @@ class ScannerService:
             "message": self.message,
             "session_num": self.session_num,
             "course_id": self.course_id,
+            "session_nums": self.session_nums,
+            "course_ids": self.course_ids,
             "error": self.error,
         }
 
@@ -44,6 +48,8 @@ class ScannerService:
         self,
         session_num: Optional[int] = None,
         course_id: Optional[str] = None,
+        session_nums: Optional[List[int]] = None,
+        course_ids: Optional[List[str]] = None,
         dry_run: bool = False,
     ) -> Dict[str, Any]:
         """Memulai proses pemindaian sesi/kelas di background task."""
@@ -55,17 +61,27 @@ class ScannerService:
         self.message = "Memulai pemindaian..."
         self.session_num = session_num
         self.course_id = course_id
+        self.session_nums = session_nums
+        self.course_ids = course_ids
         self.error = None
 
         self.task = asyncio.create_task(
-            self._run_scan(session_num=session_num, course_id=course_id, dry_run=dry_run)
+            self._run_scan(
+                session_num=session_num,
+                course_id=course_id,
+                session_nums=session_nums,
+                course_ids=course_ids,
+                dry_run=dry_run,
+            )
         )
         return {"status": "started", "message": "Pemindaian dimulai"}
 
     async def _run_scan(
         self,
-        session_num: Optional[int],
-        course_id: Optional[str],
+        session_num: Optional[int] = None,
+        course_id: Optional[str] = None,
+        session_nums: Optional[List[int]] = None,
+        course_ids: Optional[List[str]] = None,
         dry_run: bool = False,
     ) -> None:
         """Loop internal eksekusi pemindaian latar belakang."""
@@ -104,11 +120,25 @@ class ScannerService:
                 )
                 return
 
-            sessions: List[int] = (
-                [int(session_num)] if session_num is not None else [1, 2, 3, 4, 5]
-            )
+            if session_nums and len(session_nums) > 0:
+                sessions: List[int] = [int(s) for s in session_nums]
+            elif session_num is not None:
+                sessions = [int(session_num)]
+            else:
+                sessions = [1, 2, 3, 4, 5]
 
-            if course_id:
+            if course_ids and len(course_ids) > 0:
+                c_set = {str(cid) for cid in course_ids}
+                target_courses = [c for c in COURSES if str(c["id"]) in c_set]
+                existing_cids = {str(c["id"]) for c in target_courses}
+                for cid in course_ids:
+                    if str(cid) not in existing_cids:
+                        target_courses.append({
+                            "id": str(cid),
+                            "name": f"Kelas {cid}",
+                            "code": f"MKWN4108.{cid}",
+                        })
+            elif course_id:
                 target_courses = [c for c in COURSES if str(c["id"]) == str(course_id)]
                 if not target_courses:
                     target_courses = [

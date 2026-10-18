@@ -62,10 +62,10 @@
   <script src="https://unpkg.com/lucide@latest"></script>
 
   <!-- Custom Theme Stylesheet -->
-  <link rel="stylesheet" href="/static/css/style.css?v=2.3">
+  <link rel="stylesheet" href="/static/css/style.css?v=2.4">
 
   <!-- Alpine.js Application Controller -->
-  <script src="/static/js/app.js?v=2.3"></script>
+  <script src="/static/js/app.js?v=2.4"></script>
   <!-- Alpine.js Core CDN -->
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 </head>
@@ -772,7 +772,7 @@
     @keydown.escape.window="closeScanModal()"
   >
     <div 
-      class="bg-white rounded-2xl border border-[#FDE68A] shadow-2xl max-w-lg w-full p-6 space-y-5"
+      class="bg-white rounded-2xl border border-[#FDE68A] shadow-2xl max-w-xl w-full p-6 space-y-4"
       @click.away="closeScanModal()"
     >
       
@@ -784,7 +784,7 @@
           </div>
           <div>
             <h3 class="text-base font-bold text-[#451A03]">Sinkronisasi Data Tuton UT</h3>
-            <p class="text-xs text-[#78350F]">Scraping tanggapan & evaluasi rubrik otomatis</p>
+            <p class="text-xs text-[#78350F]">Pilih beberapa sesi dan kelas untuk scraping & evaluasi otomatis</p>
           </div>
         </div>
         <button 
@@ -796,35 +796,133 @@
       </div>
 
       <!-- Form Inputs (Disabled while running) -->
-      <div class="space-y-3" :class="{'opacity-60 pointer-events-none': scanStatus.is_running}">
+      <div class="space-y-4" :class="{'opacity-60 pointer-events-none': scanStatus.is_running}">
+        
+        <!-- Multi-Select Target Sesi -->
         <div>
-          <label class="block text-xs font-bold text-[#78350F] uppercase tracking-wider mb-1">Target Sesi</label>
-          <select 
-            x-model="scanForm.session_num"
-            class="w-full bg-[#FFFDF5] border border-[#FDE68A] rounded-xl px-3 py-2 text-xs font-semibold text-[#451A03] focus:ring-2 focus:ring-[#D97706]"
-          >
-            <option :value="''">Semua Sesi Aktif</option>
+          <div class="flex items-center justify-between mb-1.5">
+            <label class="text-xs font-bold text-[#78350F] uppercase tracking-wider">
+              Target Sesi <span class="text-[#D97706]" x-text="`(${scanForm.session_nums.length} dipilih)`"></span>
+            </label>
+            <div class="flex items-center gap-2 text-[11px] font-semibold">
+              <button 
+                type="button" 
+                @click="selectAllScanSessions()"
+                class="text-[#D97706] hover:text-[#B45309] hover:underline"
+              >Semua Sesi</button>
+              <span class="text-[#FDE68A]">|</span>
+              <button 
+                type="button" 
+                @click="selectActiveScanSessions()"
+                class="text-[#D97706] hover:text-[#B45309] hover:underline"
+              >Sesi Aktif (4 & 5)</button>
+              <span class="text-[#FDE68A]">|</span>
+              <button 
+                type="button" 
+                @click="clearScanSessions()"
+                class="text-gray-500 hover:text-gray-700 hover:underline"
+              >Hapus</button>
+            </div>
+          </div>
+
+          <!-- Session selection grid: 4 columns on sm, 2 on mobile -->
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
             <template x-for="s in 8" :key="s">
-              <option :value="s" x-text="`Sesi ${s} ${isSessionTugas(s) ? '(Tugas)' : '(Diskusi)'}`"></option>
+              <button
+                type="button"
+                @click="toggleScanSession(s)"
+                class="px-2.5 py-2 rounded-xl border text-left transition-all flex items-center justify-between cursor-pointer select-none"
+                :class="isScanSessionSelected(s) 
+                  ? 'bg-[#FEF3C7] border-[#D97706] text-[#92400E] shadow-xs ring-1 ring-[#D97706]' 
+                  : 'bg-[#FFFDF5] border-[#FDE68A] text-stone-600 hover:border-amber-300 hover:bg-amber-50/40'"
+              >
+                <div class="flex items-center gap-2 min-w-0">
+                  <div 
+                    class="w-4 h-4 rounded border flex items-center justify-center shrink-0 text-white"
+                    :class="isScanSessionSelected(s) ? 'bg-[#D97706] border-[#D97706]' : 'border-stone-300 bg-white'"
+                  >
+                    <svg x-show="isScanSessionSelected(s)" class="w-3 h-3 stroke-current" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                  <span class="text-xs font-bold leading-tight truncate" x-text="`Sesi ${s}`"></span>
+                </div>
+                <span 
+                  class="text-[9px] font-bold px-1.5 py-0.5 rounded shrink-0 ml-1"
+                  :class="isSessionTugas(s) ? 'bg-purple-100 text-purple-700' : 'bg-amber-100 text-[#92400E]'"
+                  x-text="isSessionTugas(s) ? 'Tugas' : 'Diskusi'"
+                ></span>
+              </button>
             </template>
-          </select>
+          </div>
         </div>
 
+        <!-- Multi-Select Target Kelas -->
         <div>
-          <label class="block text-xs font-bold text-[#78350F] uppercase tracking-wider mb-1">Target Kelas</label>
-          <select 
-            x-model="scanForm.course_id"
-            class="w-full bg-[#FFFDF5] border border-[#FDE68A] rounded-xl px-3 py-2 text-xs font-semibold text-[#451A03] focus:ring-2 focus:ring-[#D97706]"
-          >
-            <option value="">Semua 4 Kelas</option>
+          <div class="flex items-center justify-between mb-1.5">
+            <label class="text-xs font-bold text-[#78350F] uppercase tracking-wider">
+              Target Kelas <span class="text-[#D97706]" x-text="`(${scanForm.course_ids.length} dipilih)`"></span>
+            </label>
+            <div class="flex items-center gap-2 text-[11px] font-semibold">
+              <button 
+                type="button" 
+                @click="selectAllScanCourses()"
+                class="text-[#D97706] hover:text-[#B45309] hover:underline"
+              >Semua Kelas</button>
+              <span class="text-[#FDE68A]">|</span>
+              <button 
+                type="button" 
+                @click="clearScanCourses()"
+                class="text-gray-500 hover:text-gray-700 hover:underline"
+              >Hapus</button>
+            </div>
+          </div>
+
+          <!-- Course selection grid: 2 columns -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
             <template x-for="course in courses" :key="course.id">
-              <option :value="String(course.id)" x-text="`${course.code} (${course.name})`"></option>
+              <button
+                type="button"
+                @click="toggleScanCourse(course.id)"
+                class="px-3 py-2 rounded-xl border text-left transition-all flex items-center justify-between cursor-pointer select-none"
+                :class="isScanCourseSelected(course.id) 
+                  ? 'bg-[#FEF3C7] border-[#D97706] text-[#92400E] shadow-xs ring-1 ring-[#D97706]' 
+                  : 'bg-[#FFFDF5] border-[#FDE68A] text-stone-600 hover:border-amber-300 hover:bg-amber-50/40'"
+              >
+                <div class="flex items-center gap-2.5 min-w-0">
+                  <div 
+                    class="w-4 h-4 rounded border flex items-center justify-center shrink-0 text-white"
+                    :class="isScanCourseSelected(course.id) ? 'bg-[#D97706] border-[#D97706]' : 'border-stone-300 bg-white'"
+                  >
+                    <svg x-show="isScanCourseSelected(course.id)" class="w-3 h-3 stroke-current" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                  <div class="min-w-0">
+                    <p class="text-xs font-bold leading-tight text-[#451A03] truncate" x-text="course.code"></p>
+                    <p class="text-[10px] text-[#78350F] truncate" x-text="course.name"></p>
+                  </div>
+                </div>
+              </button>
             </template>
-          </select>
+          </div>
+        </div>
+
+        <!-- Kombinasi Sinkronisasi Summary -->
+        <div class="flex items-center justify-between bg-[#FFFDF5] border border-[#FDE68A] rounded-xl px-3 py-2 text-xs">
+          <span class="text-[#78350F] font-medium flex items-center gap-1.5">
+            <i data-lucide="layers" class="w-4 h-4 text-[#D97706]"></i>
+            <span>Antrean:</span>
+            <span class="font-bold text-[#D97706]" x-text="`${scanForm.session_nums.length} Sesi × ${scanForm.course_ids.length} Kelas = ${scanForm.session_nums.length * scanForm.course_ids.length} Kombinasi`"></span>
+          </span>
+          <span x-show="scanForm.session_nums.length === 0 || scanForm.course_ids.length === 0" class="text-xs font-bold text-red-600 flex items-center gap-1">
+            <i data-lucide="alert-circle" class="w-3.5 h-3.5"></i>
+            <span>Pilih min. 1 sesi & 1 kelas</span>
+          </span>
         </div>
 
         <!-- Dry Run Mode Option -->
-        <label class="flex items-center gap-2 cursor-pointer pt-1">
+        <label class="flex items-center gap-2 cursor-pointer pt-0.5">
           <input 
             type="checkbox" 
             x-model="scanForm.dry_run"

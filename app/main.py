@@ -119,6 +119,8 @@ class SubmitToUtRequest(BaseModel):
 class ScanRequest(BaseModel):
     session_num: Optional[int] = None
     course_id: Optional[str] = None
+    session_nums: Optional[List[int]] = None
+    course_ids: Optional[List[str]] = None
     dry_run: bool = False
 
 
@@ -266,11 +268,15 @@ async def start_scan(
     scanner.db = db
     session_num = payload.session_num if payload else None
     course_id = payload.course_id if payload else None
+    session_nums = payload.session_nums if payload else None
+    course_ids = payload.course_ids if payload else None
     dry_run = payload.dry_run if payload else False
 
     result = await scanner.start_scan(
         session_num=session_num,
         course_id=course_id,
+        session_nums=session_nums,
+        course_ids=course_ids,
         dry_run=dry_run,
     )
     return result

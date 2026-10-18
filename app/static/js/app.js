@@ -37,6 +37,8 @@ document.addEventListener('alpine:init', () => {
     scanForm: {
       session_num: null,
       course_id: '',
+      session_nums: [],
+      course_ids: [],
       dry_run: false
     },
     scanStatus: {
@@ -543,11 +545,79 @@ document.addEventListener('alpine:init', () => {
      * Buka Scan Modal
      */
     openScanModal(sessionNum = null, courseId = '') {
-      this.scanForm.session_num = sessionNum !== null ? sessionNum : (this.selectedSession || '');
-      this.scanForm.course_id = courseId || this.selectedCourse || '';
+      // Inisialisasi daftar sesi terpilih
+      if (sessionNum !== null && sessionNum !== '') {
+        this.scanForm.session_nums = [Number(sessionNum)];
+      } else if (this.selectedSession !== null && this.selectedSession !== '') {
+        this.scanForm.session_nums = [Number(this.selectedSession)];
+      } else {
+        this.scanForm.session_nums = [4, 5];
+      }
+
+      // Inisialisasi daftar kelas terpilih
+      if (courseId) {
+        this.scanForm.course_ids = [String(courseId)];
+      } else if (this.selectedCourse) {
+        this.scanForm.course_ids = [String(this.selectedCourse)];
+      } else {
+        this.scanForm.course_ids = this.courses && this.courses.length > 0 
+          ? this.courses.map(c => String(c.id))
+          : ['413073', '413077', '413081', '411401'];
+      }
+
       this.scanForm.dry_run = false;
       this.scanModalOpen = true;
       this.refreshIcons();
+    },
+
+    /**
+     * Multi-select helpers untuk Target Sesi
+     */
+    toggleScanSession(sNum) {
+      const s = Number(sNum);
+      const idx = this.scanForm.session_nums.indexOf(s);
+      if (idx > -1) {
+        this.scanForm.session_nums.splice(idx, 1);
+      } else {
+        this.scanForm.session_nums.push(s);
+        this.scanForm.session_nums.sort((a, b) => a - b);
+      }
+    },
+    selectAllScanSessions() {
+      this.scanForm.session_nums = [1, 2, 3, 4, 5, 6, 7, 8];
+    },
+    selectActiveScanSessions() {
+      this.scanForm.session_nums = [4, 5];
+    },
+    clearScanSessions() {
+      this.scanForm.session_nums = [];
+    },
+    isScanSessionSelected(sNum) {
+      return this.scanForm.session_nums.includes(Number(sNum));
+    },
+
+    /**
+     * Multi-select helpers untuk Target Kelas
+     */
+    toggleScanCourse(cId) {
+      const cid = String(cId);
+      const idx = this.scanForm.course_ids.indexOf(cid);
+      if (idx > -1) {
+        this.scanForm.course_ids.splice(idx, 1);
+      } else {
+        this.scanForm.course_ids.push(cid);
+      }
+    },
+    selectAllScanCourses() {
+      this.scanForm.course_ids = this.courses && this.courses.length > 0
+        ? this.courses.map(c => String(c.id))
+        : ['413073', '413077', '413081', '411401'];
+    },
+    clearScanCourses() {
+      this.scanForm.course_ids = [];
+    },
+    isScanCourseSelected(cId) {
+      return this.scanForm.course_ids.includes(String(cId));
     },
 
     /**
@@ -573,10 +643,19 @@ document.addEventListener('alpine:init', () => {
      * Jalankan Scan dari modal
      */
     async triggerScan() {
+      if (!this.scanForm.session_nums || this.scanForm.session_nums.length === 0) {
+        this.showToast('Silakan pilih minimal satu sesi untuk disinkronkan', 'warning');
+        return;
+      }
+      if (!this.scanForm.course_ids || this.scanForm.course_ids.length === 0) {
+        this.showToast('Silakan pilih minimal satu kelas untuk disinkronkan', 'warning');
+        return;
+      }
+
       try {
         const payload = {
-          session_num: this.scanForm.session_num ? Number(this.scanForm.session_num) : null,
-          course_id: this.scanForm.course_id ? String(this.scanForm.course_id) : null,
+          session_nums: this.scanForm.session_nums.map(Number),
+          course_ids: this.scanForm.course_ids.map(String),
           dry_run: Boolean(this.scanForm.dry_run)
         };
 
