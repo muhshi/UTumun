@@ -162,3 +162,50 @@ async def test_submit_single_grade_to_ut_forum_already_replied(monkeypatch):
     )
     assert res["success"] is True
     assert "berhasil" in res["message"].lower()
+
+
+@pytest.mark.anyio
+async def test_submit_single_grade_to_ut_assignment_sesi7_mocked_success(monkeypatch):
+    """Test pengiriman nilai dan feedback untuk Tugas 3 (Sesi 7)."""
+    monkeypatch.setattr("tuton.submitter.get_assign_cmid", lambda cid, snum: "47303061")
+
+    mock_page = AsyncMock()
+    mock_context = AsyncMock()
+    mock_context.new_page = AsyncMock(return_value=mock_page)
+
+    mock_browser = AsyncMock()
+    mock_browser.new_context = AsyncMock(return_value=mock_context)
+    mock_browser.close = AsyncMock()
+
+    mock_p = MagicMock()
+    mock_p.chromium.launch = AsyncMock(return_value=mock_browser)
+
+    mock_cm = AsyncMock()
+    mock_cm.__aenter__ = AsyncMock(return_value=mock_p)
+    mock_cm.__aexit__ = AsyncMock(return_value=None)
+
+    monkeypatch.setattr("tuton.submitter.async_playwright", lambda: mock_cm)
+    monkeypatch.setattr("tuton.submitter.ensure_authenticated_page", AsyncMock())
+
+    # Mock evaluate calls
+    mock_page.evaluate = AsyncMock(return_value=True)
+    mock_page.locator = MagicMock()
+    mock_locator_obj = AsyncMock()
+    mock_locator_obj.count = AsyncMock(return_value=1)
+    mock_locator_obj.fill = AsyncMock()
+    mock_locator_obj.click = AsyncMock()
+    mock_page.locator.return_value.first = mock_locator_obj
+    mock_page.locator.return_value = mock_locator_obj
+
+    res = await submit_single_grade_to_ut(
+        course_id="413073",
+        session_num=7,
+        student_nim="059011075",
+        score=95,
+        feedback="Halo Gerry Arfiansyah, tugas proposal Anda sangat baik.\n\nPertahankan penalaran ilmiah ini!",
+        student_name="Gerry Arfiansyah",
+        userid="123456",
+    )
+    assert res["success"] is True
+    assert "berhasil" in res["message"].lower()
+

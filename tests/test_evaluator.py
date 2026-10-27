@@ -134,5 +134,27 @@ def test_evaluate_submission_sesi6():
     assert "Asisten" not in res["feedback"]
 
 
+def test_evaluate_submission_sesi7():
+    student_content = """
+    TUGAS 3 BAHASA INDONESIA
+    1. Analisis komponen struktural: proposal belum memuat tujuan penelitian, manfaat penelitian teoritis dan praktis, tinjauan pustaka, teknik analisis data regresi linier, dan daftar pustaka.
+    2. Analisis kaidah bahasa dan logika: kata 'presentase' tidak baku seharusnya 'persentase', penulisan 'pra penelitian' seharusnya digabung 'prapenelitian', terdapat inkonsistensi variabel motivasi belajar vs prestasi belajar, serta kata hiperbolis 'sangat berbahaya'.
+    3. Draf perbaikan proposal: Judul Pengaruh Aktivitas Bermain Game Online Terhadap Prestasi Belajar Siswa SMP, latar belakang, rumusan masalah, hipotesis, metode penelitian populasi dan sampel, kuesioner skala likert, dan daftar pustaka modul 6 dan 7.
+    BMP MKWN4108 modul 6 dan 7.
+    """
+    res = evaluate_submission(student_name="GERRY ARFIANSYAH", content=student_content, session_num=7)
+    assert res["score"] >= 88
+    paragraphs = [p for p in res["feedback"].split("\n\n") if p.strip()]
+    assert len(paragraphs) == 2
+    assert "Halo Gerry Arfiansyah" in paragraphs[0]
+    assert "NIM" not in paragraphs[0]
+    assert "Tugas 3" in paragraphs[0]
+    assert "proposal" in paragraphs[0].lower() or "komponen" in paragraphs[0].lower()
+    assert "Tugas 2" not in paragraphs[0]
+    assert "718 bahasa" not in paragraphs[0]
+    assert "Asisten" not in res["feedback"]
+
+
+
 
 

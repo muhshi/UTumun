@@ -303,6 +303,47 @@ def evaluate_submission(student_name: str, content: str, session_num: int) -> Di
             f"Pertahankan daya kritis, kecermatan berbahasa, dan antusiasme belajar ini pada sesi-sesi diskusi berikutnya!"
         )
 
+    elif session_num == 7:
+        # Rubrik Sesi 7 (Tugas 3): Analisis Komponen Proposal Ilmiah, Kaidah Bahasa & Logika, Draf Perbaikan Proposal
+        has_komponen = any(k in c_lower for k in ["komponen", "struktural", "tujuan penelitian", "manfaat", "tinjauan pustaka", "landasan teori", "teknik analisis"])
+        has_bahasa = any(k in c_lower for k in ["persentase", "presentase", "prapenelitian", "pra penelitian", "puebi", "eyd", "hiperbolis", "motivasi", "prestasi"])
+        has_proposal = any(k in c_lower for k in ["proposal", "game online", "gim daring", "latar belakang", "rumusan masalah", "hipotesis", "metode penelitian"])
+        has_dapus = any(k in c_lower for k in ["daftar pustaka", "referensi", "daftar referensi", "modul"])
+        has_bmp = "mkwn4108" in c_lower or "bmp" in c_lower or "modul 6" in c_lower or "modul 7" in c_lower or "modul" in c_lower
+
+        score = 82
+        if has_komponen: score += 4
+        if has_bahasa: score += 3
+        if has_proposal: score += 4
+        if has_dapus: score += 1
+        if has_bmp: score += 1
+
+        score = min(max(score, 85), 95)
+
+        p1 = (
+            f"Halo {name}, terima kasih atas pengunggahan Tugas 3 mata kuliah Bahasa Indonesia ini. "
+            f"Secara keseluruhan, pengerjaan tugas Saudara sudah sangat baik dan sistematis, terutama dalam menganalisis "
+            f"kelengkapan komponen struktural proposal penelitian yang masih rumpang, kecermatan mengidentifikasi kesalahan "
+            f"kaidah ejaan bahasa baku (seperti perbaikan bentuk kata 'persentase' dan 'prapenelitian'), serta ketepatan "
+            f"menyoroti inkonsistensi variabel dan diksi subjektif. Draf perbaikan proposal yang Saudara rumuskan juga telah "
+            f"disusun dengan struktur metodologi ilmiah yang jauh lebih komprehensif."
+        )
+
+        catatan = []
+        if not has_bahasa:
+            catatan.append("memperdalam telaah kritis kaidah ejaan bentuk terikat dan ketepatan diksi objektif karya ilmiah")
+        if not has_dapus:
+            catatan.append("memperlengkap entri daftar referensi dengan standar penulisan APA Style secara konsisten")
+        if not has_bmp:
+            catatan.append("mencantumkan rujukan Buku Materi Pokok (BMP MKWN4108) Modul 6 dan 7 UT terkait teknik penulisan karya ilmiah")
+
+        saran_str = " serta ".join(catatan) if catatan else "memperkaya rujukan literatur pendukung pada latar belakang masalah agar landasan empiris proposal semakin kuat"
+
+        p2 = (
+            f"Sebagai catatan penyempurnaan ke depan, Saudara dapat {saran_str}. "
+            f"Pertahankan kecermatan bernalar ilmiah dan terus tingkatkan kualitas penulisan akademis Saudara!"
+        )
+
     else:
         # Generic fallback untuk sesi diskusi lainnya
         score = 85

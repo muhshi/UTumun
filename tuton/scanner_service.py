@@ -206,10 +206,11 @@ class ScannerService:
                                         final_fb = scraped_fb
                                         if not final_fb and existing_sub and existing_sub.get("feedback"):
                                             is_dup = "keunggulan jawaban saudara tampak pada ketepatan merumuskan judul" in existing_sub["feedback"].lower()
-                                            if not is_dup:
+                                            is_wrong_s7 = s_num == 7 and ("tugas 2" in existing_sub["feedback"].lower() or "718 bahasa" in existing_sub["feedback"].lower())
+                                            if not is_dup and not is_wrong_s7:
                                                 final_fb = existing_sub["feedback"]
                                         if not final_fb:
-                                            eval_fn = evaluate_with_gemini if s_num == 5 else evaluate_submission
+                                            eval_fn = evaluate_with_gemini if s_num in [5, 6, 7] else evaluate_submission
                                             eval_res = eval_fn(author_name, s.get("content") or s.get("fileText", ""), s_num)
                                             final_fb = eval_res.get("feedback")
 
@@ -229,11 +230,12 @@ class ScannerService:
                                     else:
                                         # Mahasiswa sudah kumpul tugas tetapi BELUM dinilai di web UT
                                         is_dup = existing_sub and "keunggulan jawaban saudara tampak pada ketepatan merumuskan judul" in (existing_sub.get("feedback") or "").lower()
-                                        if existing_sub and existing_sub.get("score") is not None and existing_sub.get("feedback") and existing_sub.get("status") in ["pending", "draft"] and existing_sub["score"] >= 88 and not is_dup:
+                                        is_wrong_s7 = s_num == 7 and existing_sub and ("tugas 2" in (existing_sub.get("feedback") or "").lower() or "718 bahasa" in (existing_sub.get("feedback") or "").lower())
+                                        if existing_sub and existing_sub.get("score") is not None and existing_sub.get("feedback") and existing_sub.get("status") in ["pending", "draft"] and existing_sub["score"] >= 88 and not is_dup and not is_wrong_s7:
                                             draft_score = existing_sub["score"]
                                             draft_fb = existing_sub["feedback"]
                                         else:
-                                            eval_fn = evaluate_with_gemini if s_num == 5 else evaluate_submission
+                                            eval_fn = evaluate_with_gemini if s_num in [5, 6, 7] else evaluate_submission
                                             traj = self.db.get_student_trajectory(student_nim, cid)
                                             prev_scores = [t["score"] for t in traj if t["session"] < s_num and t.get("score") is not None]
                                             prev_s = prev_scores[-1] if prev_scores else None

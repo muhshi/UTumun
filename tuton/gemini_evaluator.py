@@ -46,6 +46,20 @@ Pokok Bahasan: Keterampilan Membaca Kritis (BMP MKWN4108 Modul 6) berdasarkan ar
 Total Skor Maksimal: 100 poin. Rentang nilai wajar mahasiswa aktif: 85 - 95.
 """
 
+RUBRIK_TUGAS_3 = """
+LEMBAR PEDOMAN PENSKORAN TUGAS TUTORIAL 3 (MKWN4108 BAHASA INDONESIA):
+Pokok Bahasan: Keterampilan Menulis Karya Ilmiah & Sistematika Proposal Penelitian (BMP MKWN4108 Modul 6 dan 7).
+1. Analisis Komponen Struktural Proposal [Maks 35 poin]:
+   - Mengidentifikasi komponen struktural yang hilang pada draf proposal penelitian kuantitatif: Tujuan Penelitian, Manfaat Penelitian (teoritis & praktis), Tinjauan Pustaka / Landasan Teori, Teknik Analisis Data (uji regresi/statistik), dan Daftar Pustaka.
+2. Analisis Kaidah Bahasa & Logika Penulisan [Maks 35 poin]:
+   - Ejaan & Bentuk Kata Baku: Menemukan dan memperbaiki kata tidak baku 'presentase' menjadi 'persentase', serta bentuk terikat 'pra penelitian' menjadi 'prapenelitian'.
+   - Kepaduan Paragraf & Logika: Mengkritisi inkonsistensi variabel penelitian antara 'motivasi belajar' dengan 'prestasi belajar'.
+   - Diksi Objektif: Mengidentifikasi diksi hiperbolis/emosional 'sangat berbahaya' yang tidak lazim dalam karya ilmiah.
+3. Draf Perbaikan Proposal Penelitian Lengkap [Maks 30 poin]:
+   - Sistematika lengkap: Judul lugas ('Pengaruh Aktivitas Bermain Game Online Terhadap Prestasi Belajar Siswa...'), Latar Belakang Masalah, Rumusan Masalah, Tujuan & Manfaat, Hipotesis Penelitian, Metode Penelitian (Populasi/Sampel, Instrumen, Uji Validitas, Analisis Data), dan Daftar Referensi (format APA Style).
+Total Skor Maksimal: 100 poin. Rentang nilai wajar mahasiswa aktif: 85 - 95.
+"""
+
 SYSTEM_PROMPT_TEMPLATE = """
 Anda adalah dosen/tutor resmi mata kuliah MKWN4108 - Bahasa Indonesia di Universitas Terbuka (UT).
 
@@ -106,7 +120,12 @@ def evaluate_with_gemini(
         logger.info(f"Teks submission mahasiswa {clean_name} terlalu singkat, fallback ke evaluator.")
         return fallback_evaluate_submission(clean_name, submission_text, session_num)
 
-    if session_num == 6:
+    if session_num == 7:
+        rubrik = RUBRIK_TUGAS_3
+        session_title = "Tugas 3"
+        greeting_example = "Halo [Nama Mahasiswa], terima kasih atas pengunggahan Tugas 3..."
+        sesi_label = f"Sesi {session_num} (Tugas 3)"
+    elif session_num == 6:
         rubrik = RUBRIK_DISKUSI_6
         session_title = "Forum Diskusi 6"
         greeting_example = "Halo [Nama Mahasiswa], terima kasih atas tanggapan aktif Saudara dalam Forum Diskusi 6 ini..."
