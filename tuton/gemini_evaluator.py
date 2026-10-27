@@ -31,22 +31,37 @@ Penggunaan bahasa baku & kerapian: [Maks 10 poin]
 Total Skor Maksimal: 100 poin. Rentang nilai wajar tugas mahasiswa aktif: 85 - 95.
 """
 
+RUBRIK_DISKUSI_6 = """
+LEMBAR PEDOMAN PENSKORAN FORUM DISKUSI 6 (MKWN4108 BAHASA INDONESIA):
+Pokok Bahasan: Keterampilan Membaca Kritis (BMP MKWN4108 Modul 6) berdasarkan artikel ilmiah "Menumbuhkan Minat Belajar Matematika pada Anak dengan Pendekatan Kreatif" (Dewi Ayu Lu'lu'atu Fu'at & Cahyo Hasanudin).
+1. Evaluasi Teks (Kekuatan & Kelemahan) [Maks 35 poin]:
+   - Mengidentifikasi kekuatan teks: relevansi topik minat matematika anak, metode SLR & triangulasi data, ragam pendekatan kreatif (model POE, metode Gasing, media alat peraga, permainan edukatif).
+   - Mengidentifikasi kelemahan teks: kesalahan tipografi/baku pada abstrak ('pendekatann', 'triagulasi', 'ketrampilan'), daftar pustaka memuat rujukan yang tidak relevan dengan matematika anak, kriteria inklusi/batasan SLR belum dirinci di abstrak.
+2. Kualitas Rangkuman [Maks 25 poin]:
+   - Rangkuman ditulis dengan kalimat sendiri (parafrasa baik/bebas plagiarisme), padat, merangkum esensi bahwa pendekatan kreatif mematahkan persepsi sulit/membosankan serta mengasah kemampuan berpikir kritis.
+3. Kreativitas & Struktur Teras Berita (Lead) [Maks 30 poin]:
+   - Lead berita berbasis peristiwa/pengamatan nyata di lingkungan sekitar, memikat pembaca, dan memenuhi unsur-unsur utama jurnalistik (5W+1H) secara efektif.
+4. Kaidah Kebahasaan & Tata Tulis [Maks 10 poin]:
+   - Menggunakan bahasa Indonesia baku, kalimat efektif, dan mematuhi PUEBI/EYD.
+Total Skor Maksimal: 100 poin. Rentang nilai wajar mahasiswa aktif: 85 - 95.
+"""
+
 SYSTEM_PROMPT_TEMPLATE = """
 Anda adalah dosen/tutor resmi mata kuliah MKWN4108 - Bahasa Indonesia di Universitas Terbuka (UT).
 
 Tugas Anda:
-Evaluasi lembar jawaban Tugas 2 mahasiswa secara teliti dan objektif berdasarkan Rubrik Penskoran Resmi UT.
+Evaluasi lembar jawaban {session_title} mahasiswa secara teliti dan objektif berdasarkan Rubrik Penskoran Resmi UT.
 
-PEDOMAN RUBRIK TUGAS 2:
+PEDOMAN RUBRIK:
 {rubrik}
 
 STANDAR FORMAT FEEDBACK (WAJIB DIPATUHI SECARA KETAT):
 1. Panjang feedback TEPAT 2 PARAGRAF (dipisahkan oleh dua baris baru \\n\\n).
 2. PARAGRAF 1 (Apresiasi & Kelebihan Spesifik):
-   - Wajib diawali sapaan pembuka: "Halo [Nama Mahasiswa], terima kasih atas pengunggahan Tugas 2..." (JANGAN mencantumkan NIM pada sapaan).
-   - Sebutkan secara SPESIFIK apa yang bagus dari jawaban mahasiswa tersebut (misal: judul yang dirumuskan, kutipan yang berhasil ditemukan, contoh peribahasa yang dipilih beserta artinya, atau ketepatan data 718 bahasa daerah).
+   - Wajib diawali sapaan pembuka: "{greeting_example}" (JANGAN mencantumkan NIM pada sapaan).
+   - Sebutkan secara SPESIFIK apa yang bagus dari jawaban mahasiswa tersebut sesuai rubrik.
 3. PARAGRAF 2 (Kekurangan Spesifik & Saran Perbaikan):
-   - Ulas bagian mana dari tugasnya yang masih kurang lengkap atau belum tepat (misal: format daftar pustaka APA yang belum konsisten tanda baca/huruf miringnya, perbaikan kutipan langsung/tidak langsung yang belum tuntas, atau perlunya memperkaya rujukan BMP MKWN4108 Modul 5/6).
+   - Ulas bagian mana dari jawabannya yang masih kurang lengkap atau belum tepat.
    - Ditutup langsung dengan kalimat pemacu semangat belajar untuk sesi-sesi selanjutnya.
 4. ATURAN BEBAS SALAM/TANDA TANGAN (SANGAT PENTING):
    - DILARANG KERAS menyertakan salam penutup atau baris tanda tangan terpisah di akhir paragraf 2 (seperti "Salam sukses,", "Salam hangat,", "Asisten...", "Tutor...", atau nama dosen/asisten).
@@ -91,13 +106,30 @@ def evaluate_with_gemini(
         logger.info(f"Teks submission mahasiswa {clean_name} terlalu singkat, fallback ke evaluator.")
         return fallback_evaluate_submission(clean_name, submission_text, session_num)
 
-    system_instruction = SYSTEM_PROMPT_TEMPLATE.format(rubrik=RUBRIK_TUGAS_2)
+    if session_num == 6:
+        rubrik = RUBRIK_DISKUSI_6
+        session_title = "Forum Diskusi 6"
+        greeting_example = "Halo [Nama Mahasiswa], terima kasih atas tanggapan aktif Saudara dalam Forum Diskusi 6 ini..."
+        sesi_label = f"Sesi {session_num} (Forum Diskusi 6)"
+    elif session_num == 5:
+        rubrik = RUBRIK_TUGAS_2
+        session_title = "Tugas 2"
+        greeting_example = "Halo [Nama Mahasiswa], terima kasih atas pengunggahan Tugas 2..."
+        sesi_label = f"Sesi {session_num} (Tugas 2)"
+    else:
+        return fallback_evaluate_submission(clean_name, submission_text, session_num)
+
+    system_instruction = SYSTEM_PROMPT_TEMPLATE.format(
+        rubrik=rubrik,
+        session_title=session_title,
+        greeting_example=greeting_example,
+    )
     user_prompt = f"""
 Nama Mahasiswa: {clean_name}
-Sesi: {session_num} (Tugas 2)
+Sesi: {sesi_label}
 {f'Nilai Sesi Sebelumnya: {previous_score}' if previous_score else ''}
 
-Berikut adalah isi berkas tugas yang diunggah oleh mahasiswa:
+Berikut adalah isi tanggapan/jawaban yang disampaikan oleh mahasiswa:
 ---
 {trimmed_text}
 ---

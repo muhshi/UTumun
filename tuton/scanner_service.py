@@ -322,10 +322,12 @@ class ScannerService:
                                     if real_score is not None:
                                         # Mahasiswa SUDAH dinilai di forum e-learning UT
                                         final_fb = real_feedback
-                                        if not final_fb and existing_sub and existing_sub.get("feedback"):
+                                        is_wrong_s6 = s_num == 6 and existing_sub and ("718 bahasa daerah" in (existing_sub.get("feedback") or "").lower() or "tugas 2" in (existing_sub.get("feedback") or "").lower())
+                                        if not final_fb and existing_sub and existing_sub.get("feedback") and not is_wrong_s6:
                                             final_fb = existing_sub["feedback"]
                                         if not final_fb:
-                                            eval_res = evaluate_submission(
+                                            eval_fn = evaluate_with_gemini if s_num in [5, 6] else evaluate_submission
+                                            eval_res = eval_fn(
                                                 name_val, st_item.get("content", ""), s_num
                                             )
                                             final_fb = eval_res.get("feedback")
@@ -345,19 +347,26 @@ class ScannerService:
                                         )
                                     else:
                                         # Mahasiswa belum dinilai di web UT (masih butuh tindakan)
+                                        is_wrong_s6 = s_num == 6 and existing_sub and ("718 bahasa daerah" in (existing_sub.get("feedback") or "").lower() or "tugas 2" in (existing_sub.get("feedback") or "").lower())
                                         if (
                                             existing_sub
                                             and existing_sub.get("score") is not None
                                             and existing_sub.get("feedback")
                                             and existing_sub.get("status") in ["pending", "draft"]
                                             and existing_sub.get("content") == st_item.get("content")
+                                            and not is_wrong_s6
                                         ):
                                             draft_score = existing_sub["score"]
                                             draft_fb = existing_sub["feedback"]
                                         else:
-                                            eval_res = evaluate_submission(
-                                                name_val, st_item.get("content", ""), s_num
-                                            )
+                                            eval_fn = evaluate_with_gemini if s_num in [5, 6] else evaluate_submission
+                                            traj = self.db.get_student_trajectory(nim_val, cid)
+                                            prev_scores = [t["score"] for t in traj if t["session"] < s_num and t.get("score") is not None]
+                                            prev_s = prev_scores[-1] if prev_scores else None
+                                            if eval_fn == evaluate_with_gemini:
+                                                eval_res = eval_fn(name_val, st_item.get("content", ""), s_num, previous_score=prev_s)
+                                            else:
+                                                eval_res = eval_fn(name_val, st_item.get("content", ""), s_num)
                                             draft_score = eval_res.get("score")
                                             draft_fb = real_feedback or eval_res.get("feedback")
 

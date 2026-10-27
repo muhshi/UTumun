@@ -247,24 +247,64 @@ async def submit_single_grade_to_ut(
                     await page.wait_for_timeout(1500)
 
                     # Cari postingan mahasiswa, atur rating nilai, dan periksa balasan tutor
-                    forum_action = await page.evaluate('''({nim, studentName, targetScore}) => {
+                    target_post_id = str(userid).strip() if userid else None
+                    forum_action = await page.evaluate('''({nim, studentName, targetScore, targetPostId}) => {
                         const articles = Array.from(document.querySelectorAll("article.forum-post-container, div.forumpost"));
                         let studentPost = null;
                         let postId = null;
                         let rated = false;
                         let replyHref = null;
 
-                        for (const art of articles) {
-                            const text = art.innerText.toLowerCase();
-                            const header = art.querySelector("header") ? art.querySelector("header").innerText.toLowerCase() : "";
-                            const isMatch = (nim && (text.includes(nim.toLowerCase()) || header.includes(nim.toLowerCase()))) ||
-                                            (studentName && (header.includes(studentName.toLowerCase()) || text.includes(studentName.toLowerCase())));
-                            const isTutor = header.includes("ainur") || header.includes("01007726");
+                        // 1. Prioritaskan pencarian tepat via targetPostId jika tersimpan di database
+                        if (targetPostId) {
+                            const exactEl = document.querySelector(`[data-post-id='${targetPostId}'], #p${targetPostId}`);
+                            if (exactEl) {
+                                studentPost = exactEl;
+                                postId = targetPostId;
+                            }
+                        }
 
-                            if (isMatch && !isTutor) {
-                                studentPost = art;
-                                postId = art.getAttribute("data-post-id");
-                                break;
+                        // 2. Jika belum ditemukan, cari melalui header postingan (abaikan artikel pertama / topik diskusi utama)
+                        if (!studentPost) {
+                            for (let i = 0; i < articles.length; i++) {
+                                const art = articles[i];
+                                const headerEl = art.querySelector("header");
+                                const header = headerEl ? headerEl.innerText.toLowerCase() : "";
+                                const isTutor = header.includes("ainur") || header.includes("01007726");
+
+                                // Lewati topik diskusi utama jika berada di index 0
+                                if (i === 0 && !header.includes("by") && !header.includes("oleh")) {
+                                    continue;
+                                }
+
+                                const isMatch = (nim && header.includes(nim.toLowerCase())) ||
+                                                (studentName && header.includes(studentName.toLowerCase()));
+
+                                if (isMatch && !isTutor) {
+                                    studentPost = art;
+                                    postId = art.getAttribute("data-post-id") || (art.id ? art.id.replace(/^p/, "") : null);
+                                    break;
+                                }
+                            }
+                        }
+
+                        // 3. Fallback pencarian lanjutan jika nama/NIM hanya muncul di badan pesan (tetap abaikan index 0)
+                        if (!studentPost) {
+                            for (let i = 1; i < articles.length; i++) {
+                                const art = articles[i];
+                                const headerEl = art.querySelector("header");
+                                const header = headerEl ? headerEl.innerText.toLowerCase() : "";
+                                const text = art.innerText.toLowerCase();
+                                const isTutor = header.includes("ainur") || header.includes("01007726");
+
+                                const isMatch = (nim && text.includes(nim.toLowerCase())) ||
+                                                (studentName && text.includes(studentName.toLowerCase()));
+
+                                if (isMatch && !isTutor) {
+                                    studentPost = art;
+                                    postId = art.getAttribute("data-post-id") || (art.id ? art.id.replace(/^p/, "") : null);
+                                    break;
+                                }
                             }
                         }
 
@@ -273,7 +313,7 @@ async def submit_single_grade_to_ut(
                         }
 
                         // Rating nilai pada postingan mahasiswa
-                        const rateSelect = studentPost.querySelector(`select#menurating${postId}`) || studentPost.querySelector("select[name*='rating']");
+                        const rateSelect = studentPost.querySelector(`select[name='rating'], select#menurating${postId}, select[id*='rating']`);
                         if (rateSelect) {
                             rateSelect.value = String(targetScore);
                             rateSelect.dispatchEvent(new Event('change', { bubbles: true }));
@@ -283,8 +323,7 @@ async def submit_single_grade_to_ut(
                         // Cek apakah tutor sudah pernah membalas postingan ini untuk mencegah spam
                         const tutorPosts = articles.filter(art => {
                             const header = art.querySelector("header") ? art.querySelector("header").innerText.toLowerCase() : "";
-                            const text = art.innerText.toLowerCase();
-                            return header.includes("ainur") || header.includes("01007726") || text.includes("01007726");
+                            return header.includes("ainur") || header.includes("01007726");
                         });
 
                         const alreadyReplied = tutorPosts.some(art => {
@@ -295,6 +334,8 @@ async def submit_single_grade_to_ut(
                         const replyLink = studentPost.querySelector("a[href*='post.php?reply='], a[data-action='reply']");
                         if (replyLink) {
                             replyHref = replyLink.href;
+                        } else if (postId) {
+                            replyHref = `https://elearning.ut.ac.id/mod/forum/post.php?reply=${postId}#mformforum`;
                         }
 
                         return {
@@ -304,7 +345,7 @@ async def submit_single_grade_to_ut(
                             alreadyReplied: alreadyReplied,
                             replyHref: replyHref
                         };
-                    }''', {"nim": student_nim, "studentName": student_name, "targetScore": score})
+                    }''', {"nim": student_nim, "studentName": student_name, "targetScore": score, "targetPostId": target_post_id})
 
                     if not isinstance(forum_action, dict) or forum_action.get("success") is False:
                         return {
@@ -327,28 +368,17 @@ async def submit_single_grade_to_ut(
                     elif reply_url and feedback:
                         logger.info(f"Membuka halaman balasan forum untuk {student_nim}: {reply_url}")
                         await page.goto(reply_url, wait_until="domcontentloaded", timeout=30000)
-                        await page.wait_for_timeout(1500)
+                        await page.wait_for_timeout(2500)
 
-                        # Injeksi draf feedback ke editor Moodle (Atto / TinyMCE / Textarea)
+                        # Injeksi draf feedback ke editor Moodle (TinyMCE 3 / Atto / Textarea)
                         feedback_injected = await page.evaluate('''({rawFeedback}) => {
                             let applied = false;
                             const paragraphs = rawFeedback.split("\\n\\n").filter(p => p.trim());
                             const htmlFeedback = paragraphs.map(p => `<p>${p.trim()}</p>`).join("");
 
-                            // 1. Editor Atto Moodle
-                            const attoEditors = document.querySelectorAll(
-                                "div.editor_atto_content, div#id_message_editor[contenteditable='true'], div[role='textbox']"
-                            );
-                            for (const ed of attoEditors) {
-                                ed.innerHTML = htmlFeedback;
-                                ed.dispatchEvent(new Event("input", { bubbles: true }));
-                                ed.dispatchEvent(new Event("change", { bubbles: true }));
-                                applied = true;
-                            }
-
-                            // 2. Editor TinyMCE via iframe
-                            const tinyIframes = document.querySelectorAll("div.tox-edit-area__iframe, iframe[id*='message']");
-                            for (const ifr of tinyIframes) {
+                            // 1. Editor TinyMCE 3 (e-learning UT: iframe#id_message_ifr)
+                            const ifr = document.querySelector('iframe#id_message_ifr, iframe[id*="message"]');
+                            if (ifr) {
                                 try {
                                     const doc = ifr.contentDocument || ifr.contentWindow.document;
                                     if (doc && doc.body) {
@@ -358,7 +388,7 @@ async def submit_single_grade_to_ut(
                                 } catch(e) {}
                             }
 
-                            // 3. Fallback ke Textarea Moodle
+                            // 2. Textarea Moodle (textarea#id_message)
                             const textareas = document.querySelectorAll(
                                 "textarea#id_message, textarea[name='message[text]'], textarea[name='message']"
                             );
@@ -369,14 +399,29 @@ async def submit_single_grade_to_ut(
                                 applied = true;
                             }
 
-                            // 4. Sinkronisasi via API TinyMCE jika tersedia
+                            // 3. Editor Atto Moodle
+                            const attoEditors = document.querySelectorAll(
+                                "div.editor_atto_content, div#id_message_editor[contenteditable='true'], div[role='textbox']"
+                            );
+                            for (const ed of attoEditors) {
+                                ed.innerHTML = htmlFeedback;
+                                ed.dispatchEvent(new Event("input", { bubbles: true }));
+                                ed.dispatchEvent(new Event("change", { bubbles: true }));
+                                applied = true;
+                            }
+
+                            // 4. Sinkronisasi via TinyMCE API jika ada
                             if (window.tinyMCE) {
                                 try {
-                                    for (const editor of Object.values(window.tinyMCE.editors || {})) {
-                                        if (editor.id && editor.id.includes("message")) {
-                                            editor.setContent(htmlFeedback);
-                                            applied = true;
-                                        }
+                                    if (window.tinyMCE.get('id_message')) {
+                                        window.tinyMCE.get('id_message').setContent(htmlFeedback);
+                                        applied = true;
+                                    } else if (window.tinyMCE.getInstanceById && window.tinyMCE.getInstanceById('id_message')) {
+                                        window.tinyMCE.getInstanceById('id_message').setContent(htmlFeedback);
+                                        applied = true;
+                                    }
+                                    if (window.tinyMCE.triggerSave) {
+                                        window.tinyMCE.triggerSave();
                                     }
                                 } catch(e) {}
                             }
@@ -390,7 +435,7 @@ async def submit_single_grade_to_ut(
                         # Klik tombol Kirim ke forum (Post to forum)
                         post_clicked = await page.evaluate('''() => {
                             const btn = document.querySelector(
-                                "input#id_submitbutton, button#id_submitbutton, input[name='submitbutton'], button[type='submit'][name='submitbutton']"
+                                "form#mformforum input#id_submitbutton, input#id_submitbutton, button#id_submitbutton, form#mformforum input[type='submit']"
                             ) || Array.from(document.querySelectorAll("input[type='submit'], button[type='submit']")).find(
                                 el => (el.value || el.innerText || "").toLowerCase().includes("forum") ||
                                       (el.value || el.innerText || "").toLowerCase().includes("kirim") ||
@@ -404,11 +449,11 @@ async def submit_single_grade_to_ut(
                         }''')
 
                         if not post_clicked:
-                            post_btn = page.locator("input#id_submitbutton, button#id_submitbutton, button:has-text('Kirim ke forum'), button:has-text('Post to forum')").first
+                            post_btn = page.locator("form#mformforum input#id_submitbutton, input#id_submitbutton, button#id_submitbutton, button:has-text('Kirim ke forum'), button:has-text('Post to forum')").first
                             if await post_btn.count() > 0:
                                 await post_btn.click()
 
-                        await page.wait_for_timeout(3000)
+                        await page.wait_for_timeout(3500)
                         logger.info(f"Balasan feedback forum berhasil dikirim untuk {student_nim}")
 
                 # Update database aktif (SQLite atau MySQL via get_db)

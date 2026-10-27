@@ -208,7 +208,7 @@ def evaluate_submission(student_name: str, content: str, session_num: int) -> Di
             f"Pertahankan kecermatan berbahasa dan cara berpikir analitis ini pada sesi-sesi diskusi mendatang!"
         )
 
-    else:
+    elif session_num == 5:
         # Rubrik Sesi 5 (Tugas 2): Judul Artikel, Identifikasi & Perbaikan Kutipan Ilmiah, Daftar Pustaka, Kondisi Bahasa Daerah & Peribahasa
         has_kutipan = any(k in c_lower for k in ["kutipan", "yudhistira", "oudri", "kbbi", "liputan6", "kemendikbud"])
         has_dapus = any(k in c_lower for k in ["daftar pustaka", "referensi", "pustaka"])
@@ -260,6 +260,59 @@ def evaluate_submission(student_name: str, content: str, session_num: int) -> Di
         p2 = (
             f"Sebagai catatan penyempurnaan ke depan, Saudara disarankan untuk {saran_str}. "
             f"Pertahankan ketelitian, penalaran ilmiah, dan semangat belajar ini pada sesi-sesi selanjutnya!"
+        )
+
+    elif session_num == 6:
+        # Rubrik Sesi 6 (Diskusi 6): Membaca Kritis - Evaluasi Teks Abstrak Matematika Kreatif, Rangkuman, & Teras Berita (Lead)
+        has_kekuatan = any(k in c_lower for k in ["kekuatan", "kelebihan", "relevan", "menarik", "slr", "systematic literature", "poe", "gasing", "alat peraga", "permainan"])
+        has_kelemahan = any(k in c_lower for k in ["kelemahan", "kekurangan", "tipografi", "typo", "pendekatann", "triagulasi", "ketrampilan", "referensi", "daftar pustaka", "tidak relevan", "inklusi", "metodologi"])
+        has_rangkuman = any(k in c_lower for k in ["rangkuman", "ringkasan", "kesimpulan", "minat belajar", "berpikir kritis"])
+        has_lead = any(k in c_lower for k in ["lead", "teras berita", "5w+1h", "unsur", "berita", "cibinong", "karawang", "jakarta", "sekolah", "sd", "smp", "sma"])
+        has_bmp = "mkwn4108" in c_lower or "bmp" in c_lower or "modul 6" in c_lower or "modul" in c_lower
+
+        score = 82
+        if has_kekuatan: score += 3
+        if has_kelemahan: score += 3
+        if has_rangkuman: score += 3
+        if has_lead: score += 3
+        if has_bmp: score += 1
+
+        score = min(max(score, 85), 95)
+
+        p1 = (
+            f"Halo {name}, terima kasih atas partisipasi aktif Saudara dalam Forum Diskusi 6 ini. "
+            f"Tanggapan yang Saudara susun sudah sangat baik dan komprehensif, khususnya dalam mengevaluasi kekuatan "
+            f"artikel ilmiah pendekatan kreatif pembelajaran matematika serta kecermatan mengidentifikasi kelemahannya, "
+            f"baik dari segi tipografi maupun ketepatan rujukan pustaka. Rangkuman yang Saudara buat mampu menangkap "
+            f"gagasan pokok teks secara padat, dan rancangan teras berita (lead) yang Saudara susun telah memenuhi unsur-unsur "
+            f"pokok jurnalistik (5W+1H) yang komunikatif berbasis pengamatan nyata di sekitar."
+        )
+
+        catatan = []
+        if not has_kelemahan:
+            catatan.append("memperdalam telaah kritis terhadap kelemahan metodologi SLR atau ketidaksesuaian referensi teks")
+        if not has_lead:
+            catatan.append("memastikan struktur teras berita (lead) memuat unsur kelengkapan waktu dan tempat kejadian secara lugas")
+        if not has_bmp:
+            catatan.append("mencantumkan rujukan Buku Materi Pokok (BMP MKWN4108) Modul 6 UT terkait keterampilan membaca kritis")
+
+        saran_str = " serta ".join(catatan) if catatan else "memperkaya variasi gaya penulisan teras berita agar semakin memikat pembaca"
+
+        p2 = (
+            f"Sebagai catatan penyempurnaan ke depan, Saudara dapat {saran_str}. "
+            f"Pertahankan daya kritis, kecermatan berbahasa, dan antusiasme belajar ini pada sesi-sesi diskusi berikutnya!"
+        )
+
+    else:
+        # Generic fallback untuk sesi diskusi lainnya
+        score = 85
+        p1 = (
+            f"Halo {name}, terima kasih atas partisipasi aktif Saudara dalam forum diskusi ini. "
+            f"Tanggapan yang Saudara berikan telah menguraikan poin-poin materi dengan runtut dan baik sesuai pokok bahasan."
+        )
+        p2 = (
+            f"Sebagai catatan penyempurnaan, Saudara dapat memperkaya argumentasi dengan rujukan ilmiah BMP MKWN4108 UT. "
+            f"Tetap semangat dan terus pertahankan keaktifan belajar Saudara!"
         )
 
     return {

@@ -112,4 +112,27 @@ def test_clean_unwanted_signatures():
     assert clean_unwanted_signatures(raw_fb_3) == raw_fb_3
 
 
+def test_evaluate_submission_sesi6():
+    student_content = """
+    1. Evaluasi artikel Dewi Ayu Lu'lu'atu Fu'at & Cahyo Hasanudin:
+       - Kekuatan: Topik sangat relevan mengatasi kecemasan matematika (math anxiety), metodologi menggunakan SLR (Systematic Literature Review) dan triangulasi data, menyajikan beragam alternatif metode kreatif seperti POE, Gasing, dan alat peraga.
+       - Kelemahan: Terdapat kesalahan tipografi seperti 'pendekatann', kriteria inklusi SLR belum dijelaskan secara mendalam, dan beberapa daftar pustaka kurang relevan.
+    2. Rangkuman: Artikel ini mematahkan anggapan bahwa matematika menakutkan dengan membuktikan bahwa pendekatan kreatif dapat meningkatkan minat dan daya nalar kritis siswa.
+    3. Teras Berita (Lead):
+       "Bojonegoro - Untuk mengatasi ketakutan anak terhadap matematika, tim mahasiswa Universitas Bojonegoro pada Senin (15/4) meluncurkan program alat peraga kreatif berbasis permainan tradisional guna meningkatkan literasi berhitung secara menyenangkan di sekolah dasar setempat."
+    BMP MKWN4108 modul 6.
+    """
+    res = evaluate_submission(student_name="BAGAS ARDIYANSAH", content=student_content, session_num=6)
+    assert res["score"] >= 88
+    paragraphs = [p for p in res["feedback"].split("\n\n") if p.strip()]
+    assert len(paragraphs) == 2
+    assert "Halo Bagas Ardiyansah" in paragraphs[0]
+    assert "NIM" not in paragraphs[0]
+    assert "matematika" in paragraphs[0].lower() or "kekuatan" in paragraphs[0].lower() or "teras berita" in paragraphs[0].lower()
+    assert "Tugas 2" not in paragraphs[0]
+    assert "718 bahasa" not in paragraphs[0]
+    assert "Asisten" not in res["feedback"]
+
+
+
 
