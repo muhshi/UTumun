@@ -345,43 +345,55 @@ def evaluate_submission(student_name: str, content: str, session_num: int) -> Di
         )
 
     elif session_num == 8:
-        # Rubrik Sesi 8 (Diskusi 8): Perangkat Lunak Antiplagiasi, Mekanisme Kerja, Teknik Parafrasa & Etika Akademik
-        has_software = any(k in c_lower for k in ["turnitin", "unicheck", "grammarly", "plagscan", "copyscape", "duplichecker", "quetext", "plagiarism checker", "perangkat lunak", "antiplagiasi", "anti plagiasi"])
-        has_mechanism = any(k in c_lower for k in ["cara kerja", "database", "similarity", "kemiripan", "persentase", "indeks", "memindai", "mencocokkan", "indexing", "text mining", "algoritma"])
-        has_paraphrase = any(k in c_lower for k in ["parafrasa", "parafrase", "paraphras", "mengubah struktur", "sinonim", "kutipan", "kalimat sendiri", "sitasi", "sumber"])
-        has_etika = any(k in c_lower for k in ["etika", "kejujuran", "integritas", "plagiat", "plagiarisme", "orisinalitas", "karya ilmiah"])
+        # Rubrik Sesi 8 (Diskusi 8): Keterampilan Menulis Karya Ilmiah & Perancangan Draf Artikel Ilmiah Mandiri
+        has_judul = "judul" in c_lower or '"' in content or "“" in content
+        has_pertanyaan = any(k in c_lower for k in ["pertanyaan", "rumusan", "rumusan masalah", "masalah penelitian", "identifikasi masalah"])
+        has_teori = any(k in c_lower for k in ["teori", "konsep", "landasan", "kajian pustaka", "andragogi", "kerangka"])
+        has_hasil = any(k in c_lower for k in ["hasil", "rancangan hasil", "pembahasan", "temuan", "data", "deskriptif", "metode"])
+        has_referensi = any(k in c_lower for k in ["referensi", "pustaka", "daftar pustaka", "sumber", "daftar rujukan", "jurnal"])
         has_bmp = "mkwn4108" in c_lower or "bmp" in c_lower or "modul 8" in c_lower or "modul 9" in c_lower or "modul" in c_lower
 
-        score = 82
-        if has_software: score += 3
-        if has_mechanism: score += 4
-        if has_paraphrase: score += 4
-        if has_etika: score += 1
-        if has_bmp: score += 1
+        score = 85
+        if has_judul: score += 2
+        if has_pertanyaan: score += 3
+        if has_teori: score += 2
+        if has_hasil: score += 2
+        if has_referensi: score += 1
 
         score = min(max(score, 85), 95)
 
+        # Ekstrak judul jika ada kutipan atau kata judul
+        topik_str = ""
+        judul_m = re.search(r'judul.*?:?\s*["“]?([^"\n\r”]+)["”]?', content, re.IGNORECASE)
+        if judul_m:
+            cand = judul_m.group(1).strip()
+            # Bersihkan jika terlalu pendek atau hanya angka/kata judul
+            if 5 < len(cand) < 90 and not cand.lower().startswith("artikel"):
+                topik_str = f" mengenai \"{cand}\""
+
         p1 = (
             f"Halo {name}, terima kasih atas partisipasi aktif Saudara dalam Forum Diskusi 8 ini. "
-            f"Tanggapan yang Saudara susun sudah sangat baik dan komprehensif, khususnya dalam mengidentifikasi ragam "
-            f"perangkat lunak antiplagiasi (seperti Turnitin dan pemeriksa plagiarisme lainnya), menguraikan mekanisme kerja "
-            f"sistem dalam memindai teks dan menghitung persentase kemiripan (similarity score) terhadap basis data, serta "
-            f"menjelaskan keterampilan parafrasa yang efektif dan beretika sebagai langkah preventif menghindari plagiarisme."
+            f"Rancangan draf artikel ilmiah{topik_str} yang Saudara susun sudah sangat baik, terstruktur, dan kreatif. "
+            f"Saudara mampu merumuskan judul yang relevan dengan fenomena penemuan di bidang keilmuan masing-masing, "
+            f"menyusun pertanyaan penelitian yang terarah, serta menyajikan landasan teori pendukung dan rencana pemaparan "
+            f"hasil kajian dengan alur bernalar yang runtut serta sistematis."
         )
 
         catatan = []
-        if not has_mechanism:
-            catatan.append("menguraikan secara lebih rinci mekanisme pencocokan teks (text indexing) pada basis data pembanding")
-        if not has_paraphrase:
-            catatan.append("memperjelas penerapan strategi parafrasa dengan perubahan struktur sintaksis kalimat di samping penggunaan sinonim")
-        if not has_bmp:
-            catatan.append("mencantumkan rujukan Buku Materi Pokok (BMP MKWN4108) Modul 8 dan 9 UT terkait etika penulisan karya ilmiah")
+        if not has_teori:
+            catatan.append("memperdalam landasan teori atau konsep ilmiah yang melandasi fenomena yang diamati")
+        if not has_hasil:
+            catatan.append("menguraikan secara lebih rinci rencana penyajian data temuan dan analisis pembahasannya")
+        if not has_referensi:
+            catatan.append("melengkapi daftar referensi atau sumber rujukan ilmiah mutakhir dengan format sitasi baku")
 
-        saran_str = " serta ".join(catatan) if catatan else "terus memperkaya wawasan mengenai pemanfaatan alat bantu digital dalam penyuntingan naskah ilmiah"
+        saran_str = " serta ".join(catatan) if catatan else "terus memperkuat ketajaman analisis antara rumusan masalah dengan rancangan pembahasan hasil"
 
         p2 = (
             f"Sebagai catatan penyempurnaan ke depan, Saudara dapat {saran_str}. "
-            f"Selamat atas ketuntasan belajar Saudara hingga sesi penutup tutorial online ini, terus pertahankan integritas akademik dan sukses selalu dalam studi perkuliahan Saudara!"
+            f"Terima kasih banyak atas partisipasi aktif Saudara dari Sesi 1 sampai Sesi 8 kali ini. "
+            f"Saya juga memohon maaf yang sebesar-besarnya apabila terdapat kekurangan selama mendampingi proses belajar Saudara. "
+            f"Tetap semangat belajar untuk persiapan Ujian Akhir Semester (UAS) mendatang, semoga sukses selalu!"
         )
 
     else:

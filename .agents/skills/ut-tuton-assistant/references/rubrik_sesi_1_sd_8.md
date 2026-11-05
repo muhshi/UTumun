@@ -95,16 +95,20 @@ Dokumen ini menjadi rujukan utama bagi asisten dalam mengevaluasi tanggapan disk
 
 ---
 
-### Sesi 8: Perangkat Lunak Antiplagiasi, Teknik Parafrasa & Etika Akademik (Modul 8 & 9)
-- **Topik Resmi:** Pemanfaatan Perangkat Lunak Antiplagiasi, Mekanisme Deteksi Plagiarisme, Keterampilan Praktik Parafrasa, serta Refleksi dan Etika Penulisan Ilmiah.
-- **4 Poin Rubrik Resmi UT (Total 100 Poin):**
-  1. **Identifikasi Perangkat Lunak Antiplagiasi [30 Poin]:**
-     - Menyebutkan dan menjelaskan ragam tools pendeteksi kemiripan teks/plagiarisme dalam dunia akademik (seperti Turnitin, Unicheck, Grammarly, PlagScan, Copyscape, DupliChecker, Quetext).
-  2. **Mekanisme Kerja Perangkat Lunak Antiplagiasi [30 Poin]:**
-     - Menguraikan tahapan sistematis: pengindeksan teks (*text indexing/tokenizing*), pemindaian dan pencocokan dengan basis data global (*database matching*), serta kalkulasi persentase indeks kemiripan (*similarity score / index*).
-  3. **Penerapan & Keterampilan Parafrasa [30 Poin]:**
-     - Menjelaskan dan mempraktikkan teknik parafrasa yang efektif (mengubah struktur aktif-pasif kalimat, memanfaatkan variasi kosakata/sinonim, mempertahankan makna asli, dan tetap mencantumkan sumber sitasi rujukan) untuk mencegah plagiarisme.
-  4. **Kaidah Kebahasaan, Integritas Akademik & Tata Tulis [10 Poin]:**
-     - Kepatuhan tata bahasa baku (PUEBI/EYD), kalimat efektif, etika kejujuran ilmiah, dan apresiasi refleksi pembelajaran.
+### Sesi 8: Keterampilan Menulis Karya Ilmiah & Perancangan Draf Artikel Ilmiah Mandiri (Modul 8 & 9)
+- **Topik Resmi:** Mahasiswa menyusun rancangan artikel ilmiah berdasarkan penemuan/kajian mandiri di bidang ilmu masing-masing, meliputi judul, pertanyaan penelitian, teori/konsep pendukung, rancangan hasil temuan, dan referensi rujukan ilmiah.
+- **Poin Rubrik Resmi UT (Total 100 Poin):**
+  1. **Ketepatan & Kejelasan Judul Artikel Ilmiah [25 Poin]:**
+     - Judul lugas, menarik, mencerminkan fenomena nyata/penemuan di bidang ilmu masing-masing, batas kata proporsional, dan memenuhi kaidah penulisan judul karya ilmiah.
+  2. **Rumusan Pertanyaan Penelitian [25 Poin]:**
+     - Pertanyaan dirumuskan secara tajam, terarah, analitis, dan memiliki keterkaitan erat dengan judul fenomena yang diangkat.
+  3. **Teori atau Konsep Pendukung Penelitian [25 Poin]:**
+     - Mengidentifikasi konsep atau teori ilmiah yang relevan dan mendasari analisis permasalahan penelitian.
+  4. **Rancangan Hasil yang Disajikan & Pembahasan [15 Poin]:**
+     - Rencana pemaparan data temuan (deskriptif/tabel/diagram), alur pembahasan hasil, dan penarikan simpulan/rekomendasi secara sistematis.
+  5. **Kaidah Bahasa & Sumber Referensi [10 Poin]:**
+     - Kepatuhan bahasa baku (PUEBI/EYD), gaya penulisan ilmiah objektif, dan kelengkapan daftar pustaka/referensi kredibel.
 - **Rujukan:** BMP MKWN4108 Modul 8 dan 9.
 - **Rentang Nilai:** 85 – 95.
+- **Catatan Khusus Feedback Sesi 8 (Sesi Penutup):**
+  - Paragraf 2 wajib menyertakan ucapan terima kasih atas partisipasi aktif mahasiswa dari Sesi 1 sampai Sesi 8, permohonan maaf atas kekurangan selama pendampingan belajar, dan ucapan semangat untuk menghadapi UAS.

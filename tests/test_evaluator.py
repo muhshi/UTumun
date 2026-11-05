@@ -157,14 +157,19 @@ def test_evaluate_submission_sesi7():
 
 def test_evaluate_submission_sesi8():
     student_content = """
-    FORUM DISKUSI 8 BAHASA INDONESIA
-    1. Perangkat lunak antiplagiasi yang saya ketahui antara lain Turnitin, Unicheck, Grammarly, PlagScan, Copyscape, dan DupliChecker.
-    2. Cara kerja perangkat lunak antiplagiasi:
-       - Pengindeksan teks: sistem memecah teks ke dalam token/frasa.
-       - Pencocokan database: membandingkan teks dengan repositori dokumen, jurnal, dan situs web di internet.
-       - Perhitungan persentase similarity score/indeks kemiripan teks.
-    3. Teknik parafrasa: mengubah struktur kalimat aktif menjadi pasif atau sebaliknya, menggunakan sinonim yang tepat, menjaga substansi makna asli, serta tetap mencantumkan sumber rujukan/sitasi agar tidak terjadi plagiarisme.
-    BMP MKWN4108 modul 8 dan 9.
+    Nama: Nurul Hidayah
+    NIM: 058812345
+    1. Judul Artikel Ilmiah:
+    "Analisis Efektivitas Pengelolaan Arsip Digital pada Tata Usaha Sekolah"
+    2. Rumusan Pertanyaan Penelitian:
+    - Bagaimana proses pengelolaan arsip surat masuk dan keluar secara digital?
+    - Kendala apa saja yang dihadapi selama implementasi sistem digital?
+    3. Teori atau Konsep Pendukung:
+    Konsep manajemen kearsipan modern dan teori andragogi dalam pelatihan staf.
+    4. Rancangan Hasil yang Disajikan:
+    Menyajikan data frekuensi surat dan waktu pemrosesan sebelum dan sesudah digitalisasi dalam bentuk tabel.
+    5. Sumber Referensi:
+    BMP MKWN4108 modul 8 dan 9, SAGE Research Methods, jurnal kearsipan.
     """
     res = evaluate_submission(student_name="NURUL HIDAYAH", content=student_content, session_num=8)
     assert res["score"] >= 88
@@ -173,7 +178,12 @@ def test_evaluate_submission_sesi8():
     assert "Halo Nurul Hidayah" in paragraphs[0]
     assert "NIM" not in paragraphs[0]
     assert "Forum Diskusi 8" in paragraphs[0]
-    assert "antiplagiasi" in paragraphs[0].lower() or "parafrasa" in paragraphs[0].lower() or "turnitin" in paragraphs[0].lower()
+    assert "artikel ilmiah" in paragraphs[0].lower() or "rancangan" in paragraphs[0].lower()
+    assert "terima kasih banyak atas partisipasi aktif saudara dari sesi 1 sampai sesi 8" in paragraphs[1].lower()
+    assert "memohon maaf" in paragraphs[1].lower()
+    assert "uas" in paragraphs[1].lower()
+    assert "antiplagiasi" not in paragraphs[0].lower()
+    assert "turnitin" not in paragraphs[0].lower()
     assert "Tugas 2" not in paragraphs[0]
     assert "Tugas 3" not in paragraphs[0]
     assert "718 bahasa" not in paragraphs[0]

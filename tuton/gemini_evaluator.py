@@ -62,15 +62,17 @@ Total Skor Maksimal: 100 poin. Rentang nilai wajar mahasiswa aktif: 85 - 95.
 
 RUBRIK_DISKUSI_8 = """
 LEMBAR PEDOMAN PENSKORAN FORUM DISKUSI 8 (MKWN4108 BAHASA INDONESIA):
-Pokok Bahasan: Perangkat Lunak Antiplagiasi, Mekanisme Deteksi Plagiarisme, Keterampilan Parafrasa, dan Etika Akademik (BMP MKWN4108 Modul 8 dan 9).
-1. Identifikasi Perangkat Lunak Antiplagiasi [Maks 30 poin]:
-   - Menyebutkan dan menjelaskan ragam aplikasi/tools pendeteksi kemiripan teks/plagiarisme dalam dunia akademik (Turnitin, Unicheck, Grammarly, PlagScan, Copyscape, DupliChecker, Quetext, dsb.).
-2. Mekanisme Kerja Perangkat Lunak Antiplagiasi [Maks 30 poin]:
-   - Menguraikan tahapan sistematis cara kerja perangkat lunak: pengindeksan teks (text indexing/tokenizing), pencocokan/pemindaian dengan basis data naskah global (jurnal, web, repositori tugas), dan perhitungan persentase kemiripan (similarity score / index).
-3. Penerapan & Keterampilan Parafrasa [Maks 30 poin]:
-   - Menguraikan teknik parafrasa yang efektif dan benar (mengubah struktur aktif-pasif kalimat, memanfaatkan variasi kosakata/sinonim, mempertahankan keaslian ide/makna, serta tetap mencantumkan sumber sitasi rujukan) untuk mencegah plagiarisme.
-4. Kaidah Kebahasaan, Integritas Akademik & Tata Tulis [Maks 10 poin]:
-   - Menggunakan bahasa Indonesia baku yang efektif, santun, sesuai PUEBI/EYD, dan mencerminkan etika integritas akademik.
+Pokok Bahasan: Keterampilan Menulis Karya Ilmiah & Perancangan Draf Artikel Ilmiah Mandiri (BMP MKWN4108 Modul 8 dan 9).
+1. Ketepatan & Kejelasan Judul Artikel Ilmiah [Maks 25 poin]:
+   - Judul lugas, menarik, mencerminkan fenomena/masalah nyata di bidang ilmu mahasiswa, memenuhi kaidah penulisan judul karya ilmiah (tidak ambigu, batas kata proporsional).
+2. Rumusan Pertanyaan Penelitian [Maks 25 poin]:
+   - Pertanyaan dirumuskan secara tajam, terarah, dan analitis, serta memiliki keterkaitan erat dengan fenomena kajian yang diangkat.
+3. Teori atau Konsep Pendukung Penelitian [Maks 25 poin]:
+   - Mengidentifikasi konsep atau teori ilmiah yang relevan dan mendasari analisis permasalahan penelitian.
+4. Rancangan Hasil yang Disajikan & Pembahasan [Maks 15 poin]:
+   - Menguraikan rencana pemaparan data temuan (deskriptif/tabel/diagram), alur pembahasan hasil, dan penarikan simpulan/rekomendasi secara sistematis.
+5. Kaidah Kebahasaan & Sumber Referensi [Maks 10 poin]:
+   - Menggunakan bahasa Indonesia baku (PUEBI/EYD), gaya penulisan ilmiah objektif, dan kelengkapan daftar pustaka/referensi kredibel.
 Total Skor Maksimal: 100 poin. Rentang nilai wajar mahasiswa aktif: 85 - 95.
 """
 
@@ -89,8 +91,9 @@ STANDAR FORMAT FEEDBACK (WAJIB DIPATUHI SECARA KETAT):
    - Wajib diawali sapaan pembuka: "{greeting_example}" (JANGAN mencantumkan NIM pada sapaan).
    - Sebutkan secara SPESIFIK apa yang bagus dari jawaban mahasiswa tersebut sesuai rubrik.
 3. PARAGRAF 2 (Kekurangan Spesifik & Saran Perbaikan):
-   - Ulas bagian mana dari jawabannya yang masih kurang lengkap atau belum tepat.
-   - Ditutup langsung dengan kalimat pemacu semangat belajar untuk sesi-sesi selanjutnya.
+   - Ulas bagian mana dari jawabannya yang masih kurang lengkap atau perlu disempurnakan.
+   - KHUSUS SESI 8 (Sesi Penutup): Paragraf 2 WAJIB diakhiri dengan kalimat penutup: "Terima kasih banyak atas partisipasi aktif Saudara dari Sesi 1 sampai Sesi 8 kali ini. Saya juga memohon maaf yang sebesar-besarnya apabila terdapat kekurangan selama mendampingi proses belajar Saudara. Tetap semangat belajar untuk persiapan Ujian Akhir Semester (UAS) mendatang, semoga sukses selalu!"
+   - Untuk sesi selain sesi 8: Ditutup langsung dengan kalimat pemacu semangat belajar untuk sesi-sesi selanjutnya.
 4. ATURAN BEBAS SALAM/TANDA TANGAN (SANGAT PENTING):
    - DILARANG KERAS menyertakan salam penutup atau baris tanda tangan terpisah di akhir paragraf 2 (seperti "Salam sukses,", "Salam hangat,", "Asisten...", "Tutor...", atau nama dosen/asisten).
    - Feedback HARUS murni berakhir pada kalimat penutup pemacu semangat belajar di paragraf 2 tanpa baris tambahan apapun.
@@ -136,9 +139,9 @@ def evaluate_with_gemini(
 
     if session_num == 8:
         rubrik = RUBRIK_DISKUSI_8
-        session_title = "Forum Diskusi 8"
-        greeting_example = "Halo [Nama Mahasiswa], terima kasih atas tanggapan aktif Saudara dalam Forum Diskusi 8 ini..."
-        sesi_label = f"Sesi {session_num} (Forum Diskusi 8)"
+        session_title = "Forum Diskusi 8 (Rancangan Artikel Ilmiah)"
+        greeting_example = "Halo [Nama Mahasiswa], terima kasih atas partisipasi aktif Saudara dalam menyusun rancangan artikel ilmiah pada Forum Diskusi 8 ini..."
+        sesi_label = f"Sesi {session_num} (Forum Diskusi 8 - Rancangan Artikel Ilmiah)"
     elif session_num == 7:
         rubrik = RUBRIK_TUGAS_3
         session_title = "Tugas 3"
@@ -190,7 +193,7 @@ Evaluasilah lembar jawaban di atas dan kembalikan JSON persis sesuai format yang
     }
 
     try:
-        with httpx.Client(timeout=30.0) as client:
+        with httpx.Client(timeout=4.0) as client:
             resp = None
             for model_name in candidate_models:
                 api_url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={GEMINI_API_KEY}"
