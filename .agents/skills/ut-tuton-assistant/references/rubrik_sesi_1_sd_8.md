@@ -95,6 +95,16 @@ Dokumen ini menjadi rujukan utama bagi asisten dalam mengevaluasi tanggapan disk
 
 ---
 
-### Sesi 8: Tata Bahasa Baku & Refleksi
-- **Topik:** Penyuntingan ejaan, tanda baca, pilihan kata (diksi), serta refleksi pembelajaran bahasa Indonesia selama satu semester tuton.
-- **Rujukan:** BMP MKWN4108 Modul 9.
+### Sesi 8: Perangkat Lunak Antiplagiasi, Teknik Parafrasa & Etika Akademik (Modul 8 & 9)
+- **Topik Resmi:** Pemanfaatan Perangkat Lunak Antiplagiasi, Mekanisme Deteksi Plagiarisme, Keterampilan Praktik Parafrasa, serta Refleksi dan Etika Penulisan Ilmiah.
+- **4 Poin Rubrik Resmi UT (Total 100 Poin):**
+  1. **Identifikasi Perangkat Lunak Antiplagiasi [30 Poin]:**
+     - Menyebutkan dan menjelaskan ragam tools pendeteksi kemiripan teks/plagiarisme dalam dunia akademik (seperti Turnitin, Unicheck, Grammarly, PlagScan, Copyscape, DupliChecker, Quetext).
+  2. **Mekanisme Kerja Perangkat Lunak Antiplagiasi [30 Poin]:**
+     - Menguraikan tahapan sistematis: pengindeksan teks (*text indexing/tokenizing*), pemindaian dan pencocokan dengan basis data global (*database matching*), serta kalkulasi persentase indeks kemiripan (*similarity score / index*).
+  3. **Penerapan & Keterampilan Parafrasa [30 Poin]:**
+     - Menjelaskan dan mempraktikkan teknik parafrasa yang efektif (mengubah struktur aktif-pasif kalimat, memanfaatkan variasi kosakata/sinonim, mempertahankan makna asli, dan tetap mencantumkan sumber sitasi rujukan) untuk mencegah plagiarisme.
+  4. **Kaidah Kebahasaan, Integritas Akademik & Tata Tulis [10 Poin]:**
+     - Kepatuhan tata bahasa baku (PUEBI/EYD), kalimat efektif, etika kejujuran ilmiah, dan apresiasi refleksi pembelajaran.
+- **Rujukan:** BMP MKWN4108 Modul 8 dan 9.
+- **Rentang Nilai:** 85 – 95.

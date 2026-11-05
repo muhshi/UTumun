@@ -60,6 +60,20 @@ Pokok Bahasan: Keterampilan Menulis Karya Ilmiah & Sistematika Proposal Peneliti
 Total Skor Maksimal: 100 poin. Rentang nilai wajar mahasiswa aktif: 85 - 95.
 """
 
+RUBRIK_DISKUSI_8 = """
+LEMBAR PEDOMAN PENSKORAN FORUM DISKUSI 8 (MKWN4108 BAHASA INDONESIA):
+Pokok Bahasan: Perangkat Lunak Antiplagiasi, Mekanisme Deteksi Plagiarisme, Keterampilan Parafrasa, dan Etika Akademik (BMP MKWN4108 Modul 8 dan 9).
+1. Identifikasi Perangkat Lunak Antiplagiasi [Maks 30 poin]:
+   - Menyebutkan dan menjelaskan ragam aplikasi/tools pendeteksi kemiripan teks/plagiarisme dalam dunia akademik (Turnitin, Unicheck, Grammarly, PlagScan, Copyscape, DupliChecker, Quetext, dsb.).
+2. Mekanisme Kerja Perangkat Lunak Antiplagiasi [Maks 30 poin]:
+   - Menguraikan tahapan sistematis cara kerja perangkat lunak: pengindeksan teks (text indexing/tokenizing), pencocokan/pemindaian dengan basis data naskah global (jurnal, web, repositori tugas), dan perhitungan persentase kemiripan (similarity score / index).
+3. Penerapan & Keterampilan Parafrasa [Maks 30 poin]:
+   - Menguraikan teknik parafrasa yang efektif dan benar (mengubah struktur aktif-pasif kalimat, memanfaatkan variasi kosakata/sinonim, mempertahankan keaslian ide/makna, serta tetap mencantumkan sumber sitasi rujukan) untuk mencegah plagiarisme.
+4. Kaidah Kebahasaan, Integritas Akademik & Tata Tulis [Maks 10 poin]:
+   - Menggunakan bahasa Indonesia baku yang efektif, santun, sesuai PUEBI/EYD, dan mencerminkan etika integritas akademik.
+Total Skor Maksimal: 100 poin. Rentang nilai wajar mahasiswa aktif: 85 - 95.
+"""
+
 SYSTEM_PROMPT_TEMPLATE = """
 Anda adalah dosen/tutor resmi mata kuliah MKWN4108 - Bahasa Indonesia di Universitas Terbuka (UT).
 
@@ -120,7 +134,12 @@ def evaluate_with_gemini(
         logger.info(f"Teks submission mahasiswa {clean_name} terlalu singkat, fallback ke evaluator.")
         return fallback_evaluate_submission(clean_name, submission_text, session_num)
 
-    if session_num == 7:
+    if session_num == 8:
+        rubrik = RUBRIK_DISKUSI_8
+        session_title = "Forum Diskusi 8"
+        greeting_example = "Halo [Nama Mahasiswa], terima kasih atas tanggapan aktif Saudara dalam Forum Diskusi 8 ini..."
+        sesi_label = f"Sesi {session_num} (Forum Diskusi 8)"
+    elif session_num == 7:
         rubrik = RUBRIK_TUGAS_3
         session_title = "Tugas 3"
         greeting_example = "Halo [Nama Mahasiswa], terima kasih atas pengunggahan Tugas 3..."

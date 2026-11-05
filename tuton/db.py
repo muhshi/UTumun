@@ -189,7 +189,18 @@ class Database:
         """Mengambil seluruh jadwal sesi (1-8)."""
         with self.get_connection() as conn:
             rows = conn.execute("SELECT * FROM sessions ORDER BY session_num ASC").fetchall()
-            return [dict(r) for r in rows]
+            sessions = [dict(r) for r in rows]
+            today = datetime.now().strftime("%Y-%m-%d")
+            for s in sessions:
+                open_d = str(s.get("open_date") or "")
+                close_d = str(s.get("close_date") or "")
+                if close_d and today > close_d:
+                    s["status"] = "closed"
+                elif open_d and today >= open_d:
+                    s["status"] = "active"
+                else:
+                    s["status"] = "upcoming"
+            return sessions
 
     def upsert_student(self, nim: str, name: str, course_id: str) -> None:
         """Menambahkan atau memperbarui data mahasiswa."""

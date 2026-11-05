@@ -198,7 +198,18 @@ class MySQLDatabase:
         with self.get_connection() as conn:
             with conn.cursor() as cursor:
                 cursor.execute("SELECT * FROM sessions ORDER BY session_num ASC")
-                return list(cursor.fetchall())
+                sessions = list(cursor.fetchall())
+                today = datetime.now().strftime("%Y-%m-%d")
+                for s in sessions:
+                    open_d = str(s.get("open_date") or "")
+                    close_d = str(s.get("close_date") or "")
+                    if close_d and today > close_d:
+                        s["status"] = "closed"
+                    elif open_d and today >= open_d:
+                        s["status"] = "active"
+                    else:
+                        s["status"] = "upcoming"
+                return sessions
 
     def upsert_student(self, nim: str, name: str, course_id: str) -> None:
         with self.get_connection() as conn:

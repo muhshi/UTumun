@@ -56,6 +56,15 @@ async def perform_login(context: BrowserContext, page: Page) -> bool:
         # Fallback jika redirect lambat tapi URL sudah berubah
         await page.wait_for_timeout(5000)
 
+    if "/my/" not in page.url:
+        err_msg = await page.evaluate("""() => {
+            const el = document.querySelector('.alert-danger, #login_error, .loginerrors');
+            return el ? el.innerText.trim() : null;
+        }""")
+        err_detail = f": {err_msg}" if err_msg else ""
+        print(f"[AUTH] Login gagal{err_detail}. Harap periksa kredensial di .env")
+        return False
+
     # Simpan state session yang valid
     Path(SESSION_FILE).parent.mkdir(parents=True, exist_ok=True)
     await context.storage_state(path=SESSION_FILE)

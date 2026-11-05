@@ -209,3 +209,62 @@ async def test_submit_single_grade_to_ut_assignment_sesi7_mocked_success(monkeyp
     assert res["success"] is True
     assert "berhasil" in res["message"].lower()
 
+
+@pytest.mark.anyio
+async def test_submit_single_grade_to_ut_forum_sesi8_mocked_success(monkeypatch):
+    """Test pengiriman rating nilai dan feedback untuk Forum Diskusi Sesi 8."""
+    monkeypatch.setattr("tuton.submitter.get_forum_cmid", lambda cid, snum: "47303073")
+
+    mock_page = AsyncMock()
+    mock_context = AsyncMock()
+    mock_context.new_page = AsyncMock(return_value=mock_page)
+
+    mock_browser = AsyncMock()
+    mock_browser.new_context = AsyncMock(return_value=mock_context)
+    mock_browser.close = AsyncMock()
+
+    mock_p = MagicMock()
+    mock_p.chromium.launch = AsyncMock(return_value=mock_browser)
+
+    mock_cm = AsyncMock()
+    mock_cm.__aenter__ = AsyncMock(return_value=mock_p)
+    mock_cm.__aexit__ = AsyncMock(return_value=None)
+
+    monkeypatch.setattr("tuton.submitter.async_playwright", lambda: mock_cm)
+    monkeypatch.setattr("tuton.submitter.ensure_authenticated_page", AsyncMock())
+
+    def mock_evaluate(script, *args):
+        if "discussionname" in script or "topic" in script:
+            return "https://elearning.ut.ac.id/mod/forum/discuss.php?d=88888"
+        elif "rateSelect" in script or "targetScore" in script:
+            return {
+                "success": True,
+                "rated": True,
+                "already_replied": False,
+                "reply_href": "https://elearning.ut.ac.id/mod/forum/post.php?reply=888881",
+            }
+        elif "id_message" in script or "editor" in script or "submit" in script:
+            return True
+        return True
+
+    mock_page.evaluate = AsyncMock(side_effect=mock_evaluate)
+
+    mock_locator_obj = AsyncMock()
+    mock_locator_obj.count = AsyncMock(return_value=1)
+    mock_locator_obj.click = AsyncMock()
+    mock_page.locator = MagicMock()
+    mock_page.locator.return_value.first = mock_locator_obj
+    mock_page.locator.return_value = mock_locator_obj
+
+    res = await submit_single_grade_to_ut(
+        course_id="413073",
+        session_num=8,
+        student_nim="051234567",
+        score=92,
+        feedback="Halo Siti, tanggapan Anda mengenai Turnitin dan parafrasa sangat baik.\n\nPertahankan integritas akademik!",
+        student_name="Siti Rahma",
+    )
+    assert res["success"] is True
+    assert "berhasil" in res["message"].lower()
+
+

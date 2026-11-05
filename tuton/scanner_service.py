@@ -207,10 +207,11 @@ class ScannerService:
                                         if not final_fb and existing_sub and existing_sub.get("feedback"):
                                             is_dup = "keunggulan jawaban saudara tampak pada ketepatan merumuskan judul" in existing_sub["feedback"].lower()
                                             is_wrong_s7 = s_num == 7 and ("tugas 2" in existing_sub["feedback"].lower() or "718 bahasa" in existing_sub["feedback"].lower())
-                                            if not is_dup and not is_wrong_s7:
+                                            is_wrong_s8 = s_num == 8 and any(k in existing_sub["feedback"].lower() for k in ["tugas 2", "tugas 3", "718 bahasa", "proposal"])
+                                            if not is_dup and not is_wrong_s7 and not is_wrong_s8:
                                                 final_fb = existing_sub["feedback"]
                                         if not final_fb:
-                                            eval_fn = evaluate_with_gemini if s_num in [5, 6, 7] else evaluate_submission
+                                            eval_fn = evaluate_with_gemini if s_num in [5, 6, 7, 8] else evaluate_submission
                                             eval_res = eval_fn(author_name, s.get("content") or s.get("fileText", ""), s_num)
                                             final_fb = eval_res.get("feedback")
 
@@ -231,11 +232,12 @@ class ScannerService:
                                         # Mahasiswa sudah kumpul tugas tetapi BELUM dinilai di web UT
                                         is_dup = existing_sub and "keunggulan jawaban saudara tampak pada ketepatan merumuskan judul" in (existing_sub.get("feedback") or "").lower()
                                         is_wrong_s7 = s_num == 7 and existing_sub and ("tugas 2" in (existing_sub.get("feedback") or "").lower() or "718 bahasa" in (existing_sub.get("feedback") or "").lower())
-                                        if existing_sub and existing_sub.get("score") is not None and existing_sub.get("feedback") and existing_sub.get("status") in ["pending", "draft"] and existing_sub["score"] >= 88 and not is_dup and not is_wrong_s7:
+                                        is_wrong_s8 = s_num == 8 and existing_sub and any(k in (existing_sub.get("feedback") or "").lower() for k in ["tugas 2", "tugas 3", "718 bahasa", "proposal"])
+                                        if existing_sub and existing_sub.get("score") is not None and existing_sub.get("feedback") and existing_sub.get("status") in ["pending", "draft"] and existing_sub["score"] >= 88 and not is_dup and not is_wrong_s7 and not is_wrong_s8:
                                             draft_score = existing_sub["score"]
                                             draft_fb = existing_sub["feedback"]
                                         else:
-                                            eval_fn = evaluate_with_gemini if s_num in [5, 6, 7] else evaluate_submission
+                                            eval_fn = evaluate_with_gemini if s_num in [5, 6, 7, 8] else evaluate_submission
                                             traj = self.db.get_student_trajectory(student_nim, cid)
                                             prev_scores = [t["score"] for t in traj if t["session"] < s_num and t.get("score") is not None]
                                             prev_s = prev_scores[-1] if prev_scores else None
@@ -325,10 +327,11 @@ class ScannerService:
                                         # Mahasiswa SUDAH dinilai di forum e-learning UT
                                         final_fb = real_feedback
                                         is_wrong_s6 = s_num == 6 and existing_sub and ("718 bahasa daerah" in (existing_sub.get("feedback") or "").lower() or "tugas 2" in (existing_sub.get("feedback") or "").lower())
-                                        if not final_fb and existing_sub and existing_sub.get("feedback") and not is_wrong_s6:
+                                        is_wrong_s8 = s_num == 8 and existing_sub and any(k in (existing_sub.get("feedback") or "").lower() for k in ["tugas 2", "tugas 3", "718 bahasa", "proposal"])
+                                        if not final_fb and existing_sub and existing_sub.get("feedback") and not is_wrong_s6 and not is_wrong_s8:
                                             final_fb = existing_sub["feedback"]
                                         if not final_fb:
-                                            eval_fn = evaluate_with_gemini if s_num in [5, 6] else evaluate_submission
+                                            eval_fn = evaluate_with_gemini if s_num in [5, 6, 7, 8] else evaluate_submission
                                             eval_res = eval_fn(
                                                 name_val, st_item.get("content", ""), s_num
                                             )
@@ -350,6 +353,7 @@ class ScannerService:
                                     else:
                                         # Mahasiswa belum dinilai di web UT (masih butuh tindakan)
                                         is_wrong_s6 = s_num == 6 and existing_sub and ("718 bahasa daerah" in (existing_sub.get("feedback") or "").lower() or "tugas 2" in (existing_sub.get("feedback") or "").lower())
+                                        is_wrong_s8 = s_num == 8 and existing_sub and any(k in (existing_sub.get("feedback") or "").lower() for k in ["tugas 2", "tugas 3", "718 bahasa", "proposal"])
                                         if (
                                             existing_sub
                                             and existing_sub.get("score") is not None
@@ -357,11 +361,12 @@ class ScannerService:
                                             and existing_sub.get("status") in ["pending", "draft"]
                                             and existing_sub.get("content") == st_item.get("content")
                                             and not is_wrong_s6
+                                            and not is_wrong_s8
                                         ):
                                             draft_score = existing_sub["score"]
                                             draft_fb = existing_sub["feedback"]
                                         else:
-                                            eval_fn = evaluate_with_gemini if s_num in [5, 6] else evaluate_submission
+                                            eval_fn = evaluate_with_gemini if s_num in [5, 6, 7, 8] else evaluate_submission
                                             traj = self.db.get_student_trajectory(nim_val, cid)
                                             prev_scores = [t["score"] for t in traj if t["session"] < s_num and t.get("score") is not None]
                                             prev_s = prev_scores[-1] if prev_scores else None
