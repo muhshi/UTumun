@@ -132,30 +132,30 @@ Ensure `/` route returns status 200 and loads polished stylesheet tags.
 - Server: `bpsdemak@10.133.21.24` -> `apps/muhshi/UTumun`
 - Container: `tuton_dashboard`
 
-- [ ] **Step 1: Push changes to GitHub repository**
+- [x] **Step 1: Push changes to GitHub repository**
 
 ```bash
 git push origin main
 ```
 
-- [ ] **Step 2: Pull repository on remote server**
+- [x] **Step 2: Pull repository on remote server**
 
 ```bash
 ssh bpsdemak@10.133.21.24 "cd apps/muhshi/UTumun && git pull"
 ```
 
-- [ ] **Step 3: Synchronize updated templates & static files into docker container**
+- [x] **Step 3: Synchronize updated templates & static files into docker container**
 
 ```bash
 ssh bpsdemak@10.133.21.24 "cd apps/muhshi/UTumun && docker cp app tuton_dashboard:/app/"
 ```
 
-- [ ] **Step 4: Restart container and test live dashboard response**
+- [x] **Step 4: Restart container and test live dashboard response**
 
 ```bash
 ssh bpsdemak@10.133.21.24 "docker restart tuton_dashboard && curl -s -f http://localhost:8020/api/recap | grep total_students"
 ```
 
-- [ ] **Step 5: Verify live UI in browser**
+- [x] **Step 5: Verify live UI in browser**
 
 Confirm port `8020` is serving the updated UI with no console errors and smooth micro-interactions.
