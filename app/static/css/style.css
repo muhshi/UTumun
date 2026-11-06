@@ -31,6 +31,20 @@
   --shadow-gold-glow: 0 0 15px 0 rgb(245 158 11 / 0.3);
 }
 
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3, h4 {
+  text-wrap: balance;
+}
+
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
 body {
   font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   background-color: var(--color-bg);
@@ -57,12 +71,33 @@ body {
 
 /* Card Hover Animations */
 .card-hover-effect {
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  transition-property: transform, box-shadow, border-color;
+  transition-duration: 200ms;
+  transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
 }
 .card-hover-effect:hover {
   transform: translateY(-2px);
   box-shadow: var(--shadow-card-hover);
   border-color: #FBBF24;
+}
+
+/* Button Micro-interactions & Hit Areas */
+.btn-tactile {
+  transition-property: transform, background-color, border-color, box-shadow, color;
+  transition-duration: 150ms;
+  transition-timing-function: ease-out;
+}
+
+.btn-tactile:active {
+  transform: scale(0.97);
+}
+
+.hit-target-40 {
+  min-width: 40px;
+  min-height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 /* Golden Glow Effects */
