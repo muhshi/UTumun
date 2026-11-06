@@ -115,12 +115,12 @@ git commit -m "feat(ui): apply tabular numbers, scoped transitions, and tactile 
 **Files:**
 - Test: `tests/`
 
-- [ ] **Step 1: Run complete test suite**
+- [x] **Step 1: Run complete test suite**
 
 Run: `.venv/bin/pytest tests/ -q`
 Expected: 76 passed.
 
-- [ ] **Step 2: Verify HTML page rendering via test client**
+- [x] **Step 2: Verify HTML page rendering via test client**
 
 Ensure `/` route returns status 200 and loads polished stylesheet tags.
 

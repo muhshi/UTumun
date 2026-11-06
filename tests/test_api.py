@@ -39,6 +39,9 @@ def test_root_endpoint(client):
     assert response.status_code == 200
     assert "html" in response.headers["content-type"].lower()
     assert "Dashboard" in response.text
+    assert "v=2.5" in response.text
+    assert "tabular-nums" in response.text
+    assert "btn-tactile" in response.text
 
 
 def test_get_recap(client, test_db):
