@@ -186,7 +186,8 @@ def test_root_template_submit_bindings(client):
     # Pastikan binding tombol submit menggunakan helper aman dan tidak menghasilkan disabled permanen
     assert "isSubmittingUt(student)" in html
     assert "isSubmittedUt(student)" in html
-    assert "app.js?v=2.4" in html
+    assert "app.js?v=2.5" in html
+    assert "style.css?v=2.5" in html
 
 
 def test_scan_multi_sessions_and_courses(client, test_db):

@@ -81,11 +81,11 @@ git commit -m "style: apply optical polish rules, tabular nums, and scoped trans
 **Files:**
 - Modify: `app/templates/index.html`
 
-- [ ] **Step 1: Audit `transition-all` occurrences in `app/templates/index.html`**
+- [x] **Step 1: Audit `transition-all` occurrences in `app/templates/index.html`**
 
 Find all 28 instances of `transition-all` and replace them with scoped transitions like `transition-colors`, `transition-transform`, or `.btn-tactile`.
 
-- [ ] **Step 2: Add `tabular-nums` to dynamic numbers and counters**
+- [x] **Step 2: Add `tabular-nums` to dynamic numbers and counters**
 
 Add `tabular-nums` to:
 - Header stats / recap counters (`total_students`, `completed`, `pending`, `completion_rate`)
@@ -93,15 +93,15 @@ Add `tabular-nums` to:
 - Matrix cells (completed/total counters per session)
 - Student card score displays and trajectory score badges
 
-- [ ] **Step 3: Expand hit areas of small action buttons to >=40px**
+- [x] **Step 3: Expand hit areas of small action buttons to >=40px**
 
 Update small icon buttons (quick copy feedback, quick copy grade, modal close, session selector items) to have `min-h-[40px] min-w-[40px]` or comfortable padding with tactile press states.
 
-- [ ] **Step 4: Update CSS & JS cache buster versions in `index.html`**
+- [x] **Step 4: Update CSS & JS cache buster versions in `index.html`**
 
 Update `style.css?v=2.5` and `app.js?v=2.5` in `app/templates/index.html`.
 
-- [ ] **Step 5: Commit Task 2 changes**
+- [x] **Step 5: Commit Task 2 changes**
 
 ```bash
 git add app/templates/index.html
